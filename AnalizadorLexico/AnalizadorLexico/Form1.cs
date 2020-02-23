@@ -17,13 +17,12 @@ namespace AnalizadorLexico
         OpenFileDialog openFile;
         StreamReader fileReader;
         bool error = false;
-        string path = "";
-        LinkedList<string> sets = new LinkedList<string>();
+        string path = "";        
         Dictionary<string, List<int>> alfabeto = new Dictionary<string, List<int>>();
 
         public GUI()
         {
-            InitializeComponent();
+            InitializeComponent();            
         }
 
         private void ingresarArchivo_Click(object sender, EventArgs e)
@@ -40,11 +39,21 @@ namespace AnalizadorLexico
         }
 
         private void leerArchivo_Click(object sender, EventArgs e)
-        {
+        {           
             string current = "";
             string line = "";
             fileReader = new StreamReader(path);
-            
+            string archivo = fileReader.ReadToEnd();
+            bool contieneTokens = archivo.IndexOf("tokens", StringComparison.OrdinalIgnoreCase) >= 0;
+            fileReader = new StreamReader(path);
+
+            //validar si contiene la sección de TOKENS
+            if (!contieneTokens)
+            {
+                error = true;
+                MessageBox.Show("EL ARCHIVO NO CONTIENE LA SECCIÓN DE \"TOKENS\"\n" + archivo);
+            }
+
             while (line != null && error == false)
             {
                 if (line.ToUpper() == "SETS" | line.ToUpper() == "TOKENS" | line.ToUpper() == "ACTIONS") {
@@ -59,99 +68,134 @@ namespace AnalizadorLexico
                 }
                 else if (current == "TOKENS")
                 {
-
+                    leerTokens(line);
                 }
                 else if (current == "ACTIONS")
                 {
 
                 }
-                line = fileReader.ReadLine();
-                if (line != null){
+                line = fileReader.ReadLine();                
+
+                if (line != null){                    
                     line = quitarEspacios(line);
                 }                
-            }           
+            }
+
+            if (error == true)
+            {
+                textBox1.Text = "";
+                path = "";
+            }
         }
 
         public void leerSets(string cadena) {
             string[] separadores = { ".." };
             int limiteInferior = 0;
             int limiteSuperior = 0;
+
             List<int> setAux = new List<int>();
             if (cadena != "") {
-                string nombre = cadena.Substring(0, cadena.IndexOf('='));
-                string[] conjuntos = cadena.Substring(cadena.IndexOf('=') + 1).Split('+');
-
-                for (int i = 0; i < conjuntos.Length; i++)
+                if (validarIgual(cadena))
                 {
-                    if (conjuntos[i].Contains("..")) { //si es un rango 
-                        //obtener los rangos inferior y superior 
-                        string[] limites = conjuntos[i].Split(separadores, StringSplitOptions.RemoveEmptyEntries);
+                    string nombre = cadena.Substring(0, cadena.IndexOf('='));
+                    string[] conjuntos = cadena.Substring(cadena.IndexOf('=') + 1).Split('+');
 
-                        if (limites[0].Contains("CHR")) //agregar rango que contenga funcion CHR
-                        {
-                            limiteInferior = validarCHR(limites[0]);
-                            limiteSuperior = validarCHR(limites[1]);
+                    for (int i = 0; i < conjuntos.Length; i++)
+                    {
+                        if (conjuntos[i].Contains(".."))
+                        { //si es un rango 
+                          //obtener los rangos inferior y superior 
+                            string[] limites = conjuntos[i].Split(separadores, StringSplitOptions.RemoveEmptyEntries);
 
-                            if ((limiteInferior < limiteSuperior) && limiteInferior != 0 && limiteSuperior != 0)
+                            if (limites[0].Contains("CHR")) //agregar rango que contenga funcion CHR
                             {
-                                for (int k = limiteInferior; k < limiteSuperior + 1; k++)
+                                limiteInferior = validarCHR(limites[0]);
+                                limiteSuperior = validarCHR(limites[1]);
+
+                                if ((limiteInferior < limiteSuperior) && limiteInferior != 0 && limiteSuperior != 0)
                                 {
-                                    setAux.Add(k);
+                                    for (int k = limiteInferior; k < limiteSuperior + 1; k++)
+                                    {
+                                        setAux.Add(k);
+                                    }
+                                }
+                                else
+                                {
+                                    error = true;
+                                    MessageBox.Show("ERROR DE FORMATO EN EL RANGO\n\t" + cadena);
                                 }
                             }
-                            else
-                            {
+                            else if (limites[0].Contains("CH") || limites[0].Contains("CR"))
+                            { // si está mal el formato de char
                                 error = true;
-                                MessageBox.Show("ERROR DE FORMATO EN EL RANGO\n\t" + cadena);
+                                MessageBox.Show("ERROR DE FORMATO DE RANGO\n\t" + cadena);
                             }
+                            else // agregar el rango al alfabeto
+                            {
+                                limiteInferior = validarLimite(limites[0]);
+                                limiteSuperior = validarLimite(limites[1]);
+
+                                if ((limiteInferior < limiteSuperior) && limiteInferior != 0 && limiteSuperior != 0)
+                                {
+                                    for (int k = limiteInferior; k < limiteSuperior + 1; k++)
+                                    {
+                                        setAux.Add(k);
+                                    }
+                                }
+                                else
+                                {
+                                    error = true;
+                                    MessageBox.Show("ERROR DE FORMATO EN EL RANGO\n\t" + cadena);
+                                }
+                            }
+
                         }
-                        else if (limites[0].Contains("CH") || limites[0].Contains("CR")) { // si está mal el formato de char
+                        else if (conjuntos[i].Contains("."))
+                        { // esta mal el formato de rango 
                             error = true;
                             MessageBox.Show("ERROR DE FORMATO DE RANGO\n\t" + cadena);
                         }
-                        else // agregar el rango al alfabeto
-                        {
-                            limiteInferior = validarLimite(limites[0]);
-                            limiteSuperior = validarLimite(limites[1]);
-
-                            if ((limiteInferior < limiteSuperior) && limiteInferior != 0 && limiteSuperior != 0)
+                        else
+                        { // es un elemento individual 
+                            int aux = validarLimite(conjuntos[i]);
+                            if (aux != 0)
                             {
-                                for (int k = limiteInferior; k < limiteSuperior + 1; k++)
-                                {
-                                    setAux.Add(k);
-                                }
+                                setAux.Add(aux);
                             }
                             else
                             {
                                 error = true;
-                                MessageBox.Show("ERROR DE FORMATO EN EL RANGO\n\t" + cadena);
+                                MessageBox.Show("ERROR DE FORMATO\n\t" + cadena);
                             }
-                        }                      
-
-                    }
-                    else if (conjuntos[i].Contains(".")) { // esta mal el formato de rango 
-                        error = true;
-                        MessageBox.Show("ERROR DE FORMATO DE RANGO\n\t" + cadena);
-                    }
-                    else { // es un elemento individual 
-                        int aux = validarLimite(conjuntos[i]);
-                        if (aux != 0) {
-                            setAux.Add(aux);
                         }
-                        else {
-                            error = true;
-                            MessageBox.Show("ERROR DE FORMATO\n\t" + cadena);
-                        }           
                     }
-                }
-                //agregar elementos al diccionario que contiene el alfabeto
-                if (setAux.Count != 0) {
-                    alfabeto.Add(nombre, setAux);
-                }                
+                    //agregar elementos al diccionario que contiene el alfabeto
+                    if (setAux.Count != 0)
+                    {
+                        alfabeto.Add(nombre, setAux);
+                    }
+                }// SI LA CADENA NO TIENE FORMATO ADECUADO
+                else
+                {
+                    error = true;
+                    MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\'\n\t" + cadena);
+                }                            
             }            
         }
 
-        public string quitarEspacios(string cadena) {
+        public bool validarIgual(string cadena) {
+            int cont = 0; 
+            for (int i = 0; i < cadena.Length; i++)
+            {
+                if (cadena[i] == '=')
+                {
+                    cont++;
+                }
+            }
+            return cont >= 1;
+        }
+
+        public string quitarEspacios(string cadena) {            
             string response = "";
             for (int i = 0; i < cadena.Length; i++)
             {
@@ -189,6 +233,45 @@ namespace AnalizadorLexico
             {
                 error = true;
                 return 0;
+            }
+        }
+
+        public void leerTokens(string cadena) {
+            if (cadena != "")
+            {
+                if (validarIgual(cadena))
+                {
+                    string nombre = cadena.Substring(0, cadena.IndexOf('='));
+                    string[] conjuntos = cadena.Substring(cadena.IndexOf('=') + 1).Split('+');
+                    nombre = nombre.ToLower();                    
+                    bool contieneToken = nombre.IndexOf("token", StringComparison.OrdinalIgnoreCase) >= 0;                    
+
+                    if (contieneToken)
+                    {
+                        int resultado = 0;
+                        int limiteCadena = cadena.IndexOf('=') - cadena.ToLower().IndexOf('n');
+                        bool succes = int.TryParse(nombre.Substring(nombre.IndexOf('n') + 1, limiteCadena - 1), out resultado);
+                        if (succes) {
+                            Console.WriteLine("NOMBRE VALIDO");
+                        }
+                        else {
+                            error = true;
+                            MessageBox.Show("ERROR DE FORMATO, NOMBRE DE TOKEN INVÁLIDO\n\t" + cadena);
+                        }
+                    }
+                    else
+                    {
+                        error = true;
+                        MessageBox.Show("ERROR DE FORMATO, NO CONTIENE LA PALARA \'TOKEN\'\n\t" + cadena);
+                    }
+
+                }//SI LA CADENA NO TIENE FORMATO ADECUADO 
+                else
+                {
+                    error = true;
+                    MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\'\n\t" + cadena);
+                }
+
             }
         }
     }
