@@ -184,15 +184,8 @@ namespace AnalizadorLexico
         }
 
         public bool validarIgual(string cadena) {
-            int cont = 0; 
-            for (int i = 0; i < cadena.Length; i++)
-            {
-                if (cadena[i] == '=')
-                {
-                    cont++;
-                }
-            }
-            return cont >= 1;
+            Console.WriteLine(cadena.IndexOf('='));
+            return cadena.IndexOf('=') != -1;
         }
 
         public string quitarEspacios(string cadena) {            
