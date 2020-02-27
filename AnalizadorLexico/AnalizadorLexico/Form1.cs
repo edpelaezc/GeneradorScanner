@@ -19,6 +19,7 @@ namespace AnalizadorLexico
         bool error = false;
         string path = "";        
         Dictionary<string, List<int>> alfabeto = new Dictionary<string, List<int>>();
+        Dictionary<string, string> tokens = new Dictionary<string, string>();
 
         public GUI()
         {
@@ -56,29 +57,31 @@ namespace AnalizadorLexico
 
             while (line != null && error == false)
             {
-                if (line.ToUpper() == "SETS" | line.ToUpper() == "TOKENS" | line.ToUpper() == "ACTIONS") {
+                if (line.ToUpper().Contains("SETS")  | line.ToUpper().Contains("TOKENS") | line.ToUpper().Contains("ACTIONS")) {
                     current = line;
                     line = fileReader.ReadLine();
-                    line = quitarEspacios(line);
+
+                    if (line != null && current != "TOKENS") {
+                        line = quitarEspacios(line);
+                    }
                 }
 
-                if (current == "SETS") // metodo para leer los SETS
+                if (current.Trim() == "SETS") // metodo para leer los. SETS
                 {
                     leerSets(line);
                 }
-                else if (current == "TOKENS")
+                else if (current.Trim() == "TOKENS")
                 {
                     leerTokens(line);
                 }
-                else if (current == "ACTIONS")
-                {
-
+                else if (current.Trim() == "ACTIONS")
+                {                    
                 }
-                line = fileReader.ReadLine();                
-
-                if (line != null){                    
-                    line = quitarEspacios(line);
-                }                
+                line = fileReader.ReadLine();
+                
+                if (line != null && current != "TOKENS") { 
+                    line = quitarEspacios(line); 
+                }
             }
 
             if (error == true)
@@ -190,9 +193,10 @@ namespace AnalizadorLexico
 
         public string quitarEspacios(string cadena) {            
             string response = "";
+            cadena = cadena.Replace('\t'.ToString(), "");
             for (int i = 0; i < cadena.Length; i++)
             {
-                if (cadena[i] != ' ')
+                if (cadena[i] != ' ') 
                     response = response + cadena[i];
             }
             return response;
@@ -234,8 +238,7 @@ namespace AnalizadorLexico
             {
                 if (validarIgual(cadena))
                 {
-                    string nombre = cadena.Substring(0, cadena.IndexOf('='));
-                    string[] conjuntos = cadena.Substring(cadena.IndexOf('=') + 1).Split('+');
+                    string nombre = cadena.Substring(0, cadena.IndexOf('='));                    
                     nombre = nombre.ToLower();                    
                     bool contieneToken = nombre.IndexOf("token", StringComparison.OrdinalIgnoreCase) >= 0;                    
 
@@ -244,7 +247,34 @@ namespace AnalizadorLexico
                         int resultado = 0;
                         int limiteCadena = cadena.IndexOf('=') - cadena.ToLower().IndexOf('n');
                         bool succes = int.TryParse(nombre.Substring(nombre.IndexOf('n') + 1, limiteCadena - 1), out resultado);
-                        if (succes) {
+                        if (succes) { //el nombre de token es valido
+                            string tokenAux = cadena.Substring(cadena.IndexOf('=') + 1);
+                            //analizar la expresión 
+                            List<string> keysIn = alfabeto.Keys.ToList();
+                            for (int i = 0; i < keysIn.Count; i++)
+                            {
+                                if (tokenAux.Contains(keysIn[i]+keysIn[i]))
+                                {
+                                    MessageBox.Show("ERROR DE FORMATO\n\t" + cadena);
+                                    error = true;                                    
+                                }
+                                else
+                                {
+                                    if (tokenAux.Contains('\''))
+                                    {
+
+                                    }
+                                    Console.WriteLine("OK");
+                                }
+                            }
+                            //hay que comprobar si el nombre ya existe o no en el diccionario
+                            try {
+                                tokens.Add(nombre, tokenAux);
+                            }
+                            catch (ArgumentException e) {
+                                MessageBox.Show("EL TOKEN YA EXISTE\n\t" + cadena);
+                                error = true;                                 
+                            }
                             Console.WriteLine("NOMBRE VALIDO");
                         }
                         else {
