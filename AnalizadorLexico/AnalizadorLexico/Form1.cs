@@ -17,9 +17,13 @@ namespace AnalizadorLexico
         OpenFileDialog openFile;
         StreamReader fileReader;
         bool error = false;
-        string path = "";        
+        string path = "";  
+        //estructuras para guardar los datos del archivo 
         Dictionary<string, List<int>> alfabeto = new Dictionary<string, List<int>>();
         Dictionary<string, string> tokens = new Dictionary<string, string>();
+        Dictionary<int, string> actions = new Dictionary<int, string>();
+        Dictionary<string, int> errores = new Dictionary<string, int>();
+        List<string> auxActions = new List<string>();
 
         public GUI()
         {
@@ -55,28 +59,80 @@ namespace AnalizadorLexico
                 MessageBox.Show("EL ARCHIVO NO CONTIENE LA SECCIÓN DE \"TOKENS\"\n" + archivo);
             }
 
-            while (line != null && error == false)
+            while (line != null && error == false) //CICLO PRINCIPAL DE LECTURA
             {
+                //comparaciones de encabezados
                 if (line.ToUpper().Contains("SETS")  | line.ToUpper().Contains("TOKENS") | line.ToUpper().Contains("ACTIONS")) {
-                    current = line;
+                    current = line.ToUpper();
                     line = fileReader.ReadLine();
 
                     if (line != null && current != "TOKENS") {
                         line = quitarEspacios(line);
                     }
+
+                    if (current.Trim() == "ACTIONS")
+                    {
+                        if (line.ToUpper().Trim() != "RESERVADAS()")
+                        {
+                            alfabeto = new Dictionary<string, List<int>>();
+                            tokens = new Dictionary<string, string>();
+                            error = true;
+                            MessageBox.Show("ERROR DE FORMATO\n\t" + line);                            
+                        }
+                        else
+                        {
+                            line = fileReader.ReadLine();
+                            line = quitarEspacios(line);
+                            if (line.Trim() != "{")
+                            {
+                                alfabeto = new Dictionary<string, List<int>>();
+                                tokens = new Dictionary<string, string>();
+                                error = true;
+                                MessageBox.Show("ERROR DE FORMATO, NO CONTIENE \'{\' DESPUES DE \"RESERVADAS()\"\n" + archivo);
+                            }
+                            else
+                            {                                
+                                line = fileReader.ReadLine();
+                                line = quitarEspacios(line);
+                                //validar que contenga llave cerrada
+                                while (line.Trim() != "}" && !line.ToUpper().Contains("ERROR"))
+                                {
+                                    auxActions.Add(line);
+                                    line = fileReader.ReadLine();
+                                    line = quitarEspacios(line);
+                                }
+
+                                if (line.Trim() != "}")
+                                {
+                                    alfabeto = new Dictionary<string, List<int>>();
+                                    tokens = new Dictionary<string, string>();
+                                    auxActions = new List<string>();
+                                    path = "";
+                                    error = true;
+                                    MessageBox.Show("ERROR DE FORMATO, NO CONTIENE \'}\'  DESPUES DE \"RESERVADAS()\"\n" + archivo);
+                                }
+                                else
+                                {
+                                    leerActions(auxActions);
+                                }
+                            }
+                        }
+                    }
                 }
 
                 if (current.Trim() == "SETS") // metodo para leer los. SETS
                 {
-                    leerSets(line);
+                    leerSets(line);                    
                 }
                 else if (current.Trim() == "TOKENS")
                 {
                     leerTokens(line);
                 }
-                else if (current.Trim() == "ACTIONS")
-                {                    
+                else if (line.Trim().ToUpper().Contains("ERROR"))
+                {
+                    leerError(line);
                 }
+                
                 line = fileReader.ReadLine();
                 
                 if (line != null && current != "TOKENS") { 
@@ -124,12 +180,14 @@ namespace AnalizadorLexico
                                 }
                                 else
                                 {
+                                    alfabeto = new Dictionary<string, List<int>>();
                                     error = true;
                                     MessageBox.Show("ERROR DE FORMATO EN EL RANGO\n\t" + cadena);
                                 }
                             }
                             else if (limites[0].Contains("CH") || limites[0].Contains("CR"))
                             { // si está mal el formato de char
+                                alfabeto = new Dictionary<string, List<int>>();
                                 error = true;
                                 MessageBox.Show("ERROR DE FORMATO DE RANGO\n\t" + cadena);
                             }
@@ -147,6 +205,7 @@ namespace AnalizadorLexico
                                 }
                                 else
                                 {
+                                    alfabeto = new Dictionary<string, List<int>>();
                                     error = true;
                                     MessageBox.Show("ERROR DE FORMATO EN EL RANGO\n\t" + cadena);
                                 }
@@ -155,6 +214,7 @@ namespace AnalizadorLexico
                         }
                         else if (conjuntos[i].Contains("."))
                         { // esta mal el formato de rango 
+                            alfabeto = new Dictionary<string, List<int>>();
                             error = true;
                             MessageBox.Show("ERROR DE FORMATO DE RANGO\n\t" + cadena);
                         }
@@ -167,6 +227,7 @@ namespace AnalizadorLexico
                             }
                             else
                             {
+                                alfabeto = new Dictionary<string, List<int>>();
                                 error = true;
                                 MessageBox.Show("ERROR DE FORMATO\n\t" + cadena);
                             }
@@ -180,6 +241,7 @@ namespace AnalizadorLexico
                 }// SI LA CADENA NO TIENE FORMATO ADECUADO
                 else
                 {
+                    alfabeto = new Dictionary<string, List<int>>();
                     error = true;
                     MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\'\n\t" + cadena);
                 }                            
@@ -220,6 +282,11 @@ namespace AnalizadorLexico
             }
         }
 
+        /// <summary>
+        /// Valida que el rango de charsets esté correctamente escrito 
+        /// </summary>
+        /// <param name="cadena">Límites superior o inferior del rango de charset</param>
+        /// <returns></returns>
         public int validarCHR(string cadena) {
             if (cadena[3] == '(' && cadena[cadena.Length - 1] == ')')
             {
@@ -233,57 +300,88 @@ namespace AnalizadorLexico
             }
         }
 
+        /// <summary>
+        /// Validaciones de los tokens.
+        /// </summary>
+        /// <param name="cadena">Linea del archivo de pruebas</param>
         public void leerTokens(string cadena) {
             if (cadena != "")
             {
                 if (validarIgual(cadena))
                 {
-                    string nombre = cadena.Substring(0, cadena.IndexOf('='));                    
+                    string nombre = cadena.Substring(0, cadena.IndexOf('='));
+                    string auxNombre = quitarEspacios(nombre);
                     nombre = nombre.ToLower();                    
-                    bool contieneToken = nombre.IndexOf("token", StringComparison.OrdinalIgnoreCase) >= 0;                    
+                    bool contieneToken = auxNombre.IndexOf("token", StringComparison.OrdinalIgnoreCase) >= 0;                    
 
                     if (contieneToken)
                     {
+                        bool tokenRechazado = false;                        
                         int resultado = 0;
                         int limiteCadena = cadena.IndexOf('=') - cadena.ToLower().IndexOf('n');
                         bool succes = int.TryParse(nombre.Substring(nombre.IndexOf('n') + 1, limiteCadena - 1), out resultado);
+
                         if (succes) { //el nombre de token es valido
                             string tokenAux = cadena.Substring(cadena.IndexOf('=') + 1);
                             //analizar la expresión 
                             List<string> keysIn = alfabeto.Keys.ToList();
-                            for (int i = 0; i < keysIn.Count; i++)
+
+                            for (int i = 0; i < keysIn.Count; i++) //ver si tiene los tokens concatenados
                             {
-                                if (tokenAux.Contains(keysIn[i]+keysIn[i]))
+                                for (int j = 0; j < keysIn.Count; j++)
                                 {
-                                    MessageBox.Show("ERROR DE FORMATO\n\t" + cadena);
-                                    error = true;                                    
+                                    if (tokenAux.Contains(keysIn[i] + keysIn[j]))
+                                    {
+                                        alfabeto = new Dictionary<string, List<int>>();
+                                        tokens = new Dictionary<string, string>();
+                                        error = true;
+                                        MessageBox.Show("ERROR DE FORMATO, LAS CLAVES ESTÁN CONCATENADAS\n\t" + cadena);                                        
+                                        tokenRechazado = true;
+                                    }
+                                }
+                            }                            
+
+                            
+                            if (!tokenRechazado)//el token paso validaciones generales
+                            {
+                                //leer token y procesarlo 
+                                string succesToken = obtenerToken(tokenAux);
+
+                                if (succesToken == "") {
+                                    alfabeto = new Dictionary<string, List<int>>();
+                                    tokens = new Dictionary<string, string>();
+                                    MessageBox.Show("ERROR EN EL FORMATO DEL TOKEN\n\t" + cadena);
+                                    error = true;
                                 }
                                 else
                                 {
-                                    if (tokenAux.Contains('\''))
+                                    //hay que comprobar si el nombre ya existe o no en el diccionario
+                                    try
                                     {
-
+                                        tokens.Add(auxNombre, succesToken);
                                     }
-                                    Console.WriteLine("OK");
+                                    catch (ArgumentException e)
+                                    {
+                                        alfabeto = new Dictionary<string, List<int>>();
+                                        tokens = new Dictionary<string, string>();
+                                        error = true;
+                                        MessageBox.Show("EL TOKEN YA EXISTE\n\t" + cadena);                                        
+                                    }
+                                    Console.WriteLine("NOMBRE VALIDO");
                                 }
                             }
-                            //hay que comprobar si el nombre ya existe o no en el diccionario
-                            try {
-                                tokens.Add(nombre, tokenAux);
-                            }
-                            catch (ArgumentException e) {
-                                MessageBox.Show("EL TOKEN YA EXISTE\n\t" + cadena);
-                                error = true;                                 
-                            }
-                            Console.WriteLine("NOMBRE VALIDO");
-                        }
+                        }//error de formato en el token
                         else {
+                            alfabeto = new Dictionary<string, List<int>>();
+                            tokens = new Dictionary<string, string>();
                             error = true;
                             MessageBox.Show("ERROR DE FORMATO, NOMBRE DE TOKEN INVÁLIDO\n\t" + cadena);
                         }
                     }
                     else
                     {
+                        alfabeto = new Dictionary<string, List<int>>();
+                        tokens = new Dictionary<string, string>();
                         error = true;
                         MessageBox.Show("ERROR DE FORMATO, NO CONTIENE LA PALARA \'TOKEN\'\n\t" + cadena);
                     }
@@ -291,11 +389,186 @@ namespace AnalizadorLexico
                 }//SI LA CADENA NO TIENE FORMATO ADECUADO 
                 else
                 {
+                    alfabeto = new Dictionary<string, List<int>>();
+                    tokens = new Dictionary<string, string>();
                     error = true;
                     MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\'\n\t" + cadena);
                 }
 
             }
         }
+
+        /// <summary>
+        /// Recibe la cadena del token entera desde el simbolo '=' hasta el final de la cadena. 
+        /// </summary>
+        /// <param name="cadena">Token completo</param>
+        public string obtenerToken(string cadena) {
+            cadena = cadena.Trim();            
+            string response = "";
+            string aux = "";
+            
+            for (int j = 0; j < cadena.Length; j++)
+            {
+                if (cadena[j] == ' ')
+                {
+                    response += aux;
+
+                    if (cadena[j + 1] != '?' && cadena[j + 1] != '+' && cadena[j + 1] != '*' && cadena[j + 1] != ')' && cadena[j + 1] != '|' && cadena[j - 1] != '(' && cadena[j - 1] != '|')
+                    {
+                        response += '.';
+                    }
+                    aux = "";
+                }
+                else if (cadena[j] == '\'')
+                {
+                    if (cadena[j + 2] != '\'') //si no está cerrada la comilla simple sale del ciclo y devuelve token invalido
+                    {
+                        response = "";
+                        aux = "";
+                        j = cadena.Length;
+                    }
+                    else
+                    {
+                        aux += cadena[j + 1];
+                        j += 2;
+                    }
+                }
+                else
+                {
+                    aux += cadena[j];
+                }
+            }
+            response += aux;
+
+
+            return response;
+        }
+
+
+        public void leerActions(List<string> reservadas) {
+            if (reservadas.Count == 0)
+            {
+                error = true;
+            }
+            else // las actions no contienen error de estructura
+            {
+                for (int i = 0; i < reservadas.Count; i++)
+                {
+                    //verificar errores de formato
+                    int resultado;
+                    string aux = reservadas[i];
+                    aux = aux.Trim();
+
+                    if (validarIgual(aux))
+                    {
+                        string numero = aux.Substring(0, aux.IndexOf('='));
+                        bool succes = int.TryParse(numero, out resultado);
+
+                        if (succes) // si el numero de action es correcto
+                        {
+                            string palabra = aux.Substring(aux.IndexOf('=') + 1);
+
+                            if (palabra[0] == '\'' && palabra[palabra.Length - 1] == '\'')
+                            {
+                                try
+                                {
+                                    actions.Add(int.Parse(numero), palabra);
+                                }
+                                catch (ArgumentException e)
+                                {
+                                    alfabeto = new Dictionary<string, List<int>>();
+                                    tokens = new Dictionary<string, string>();
+                                    auxActions = new List<string>();
+                                    actions = new Dictionary<int, string>();
+                                    error = true;
+                                    MessageBox.Show("LA PALABRA RESERVADA YA EXISTE\n\t" + aux);
+                                }
+                            }
+                            else
+                            {
+                                alfabeto = new Dictionary<string, List<int>>();
+                                tokens = new Dictionary<string, string>();
+                                actions = new Dictionary<int, string>();
+                                auxActions = new List<string>();
+                                i = reservadas.Count;
+                                error = true;
+                                MessageBox.Show("ERROR DE FORMATO, FALTA \'\n\t" + aux);
+                            }
+                        }
+                        else
+                        {
+                            alfabeto = new Dictionary<string, List<int>>();
+                            tokens = new Dictionary<string, string>();
+                            actions = new Dictionary<int, string>();
+                            auxActions = new List<string>();
+                            i = reservadas.Count;
+                            error = true;
+                            MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\'\n\t" + aux);
+                        }
+                    }
+                    else //ERROR EN EL FORMATO
+                    {
+                        alfabeto = new Dictionary<string, List<int>>();
+                        tokens = new Dictionary<string, string>();
+                        actions = new Dictionary<int, string>();
+                        auxActions = new List<string>();
+                        i = reservadas.Count;
+                        error = true;
+                        MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\'\n\t" + aux);
+                    }
+                }                
+            }
+        }
+
+
+        public void leerError(string cadena) {
+            if (validarIgual(cadena))
+            {
+                cadena = cadena.Trim();
+                int numero = 0;
+                string nombre = cadena.Substring(0, cadena.IndexOf('='));
+                bool succes = int.TryParse(cadena.Substring(cadena.IndexOf('=') + 1), out numero);
+
+                if (succes)
+                {
+                    try
+                    {
+                        errores.Add(nombre, numero);
+                    }
+                    catch (ArgumentException)
+                    {
+                        alfabeto = new Dictionary<string, List<int>>();
+                        tokens = new Dictionary<string, string>();
+                        auxActions = new List<string>();
+                        actions = new Dictionary<int, string>();
+                        errores = new Dictionary<string, int>();
+                        error = true;
+                        MessageBox.Show("EL ERROR YA EXISTE RESERVADA YA EXISTE\n\t" + cadena);
+                    }
+                }
+                else
+                {
+                    alfabeto = new Dictionary<string, List<int>>();
+                    tokens = new Dictionary<string, string>();
+                    auxActions = new List<string>();
+                    actions = new Dictionary<int, string>();
+                    errores = new Dictionary<string, int>();
+                    error = true;
+                    MessageBox.Show("ERROR DE FORMATO\n\t" + cadena);
+                }
+            }
+            else //ERROR EN EL FORMATO
+            {
+                alfabeto = new Dictionary<string, List<int>>();
+                tokens = new Dictionary<string, string>();
+                auxActions = new List<string>();
+                actions = new Dictionary<int, string>();
+                errores = new Dictionary<string, int>();
+                error = true;
+                MessageBox.Show("ERROR DE FORMATO, NO TIENE EL SINGO \'=\'\n\t" + cadena);
+            }
+        }
+
+
     }
 }

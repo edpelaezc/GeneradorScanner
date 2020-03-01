@@ -37,7 +37,7 @@
             // 
             this.textBox1.Location = new System.Drawing.Point(31, 58);
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(198, 20);
+            this.textBox1.Size = new System.Drawing.Size(367, 20);
             this.textBox1.TabIndex = 0;
             // 
             // ingresarArchivo
@@ -52,7 +52,7 @@
             // 
             // leerArchivo
             // 
-            this.leerArchivo.Location = new System.Drawing.Point(154, 84);
+            this.leerArchivo.Location = new System.Drawing.Point(112, 84);
             this.leerArchivo.Name = "leerArchivo";
             this.leerArchivo.Size = new System.Drawing.Size(75, 41);
             this.leerArchivo.TabIndex = 2;
