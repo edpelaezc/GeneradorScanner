@@ -47,10 +47,20 @@ namespace AnalizadorLexico
         {           
             string current = "";
             string line = "";
-            fileReader = new StreamReader(path);
-            string archivo = fileReader.ReadToEnd();
-            bool contieneTokens = archivo.IndexOf("tokens", StringComparison.OrdinalIgnoreCase) >= 0;
-            fileReader = new StreamReader(path);
+            string archivo = "";
+            bool contieneTokens = false;
+            if (path != "")
+            {
+                fileReader = new StreamReader(path);
+                archivo = fileReader.ReadToEnd();
+                contieneTokens = archivo.IndexOf("tokens", StringComparison.OrdinalIgnoreCase) >= 0;
+                fileReader = new StreamReader(path);
+            }
+            else
+            {
+                error = true;
+                MessageBox.Show("TIENE QUE INGRESAR UN ARCHIVO");
+            }
 
             //validar si contiene la sección de TOKENS
             if (!contieneTokens)
@@ -138,6 +148,12 @@ namespace AnalizadorLexico
                 if (line != null && current != "TOKENS") { 
                     line = quitarEspacios(line); 
                 }
+            }
+
+            if (line == null)
+            {
+                generarDFA.Enabled = true;
+                MessageBox.Show("ARCHIVO LEÍDO CON ÉXITO");
             }
 
             if (error == true)
@@ -472,6 +488,7 @@ namespace AnalizadorLexico
                             {
                                 try
                                 {
+                                    palabra = palabra.Replace("\'", "");
                                     actions.Add(int.Parse(numero), palabra);
                                 }
                                 catch (ArgumentException e)
@@ -569,6 +586,28 @@ namespace AnalizadorLexico
             }
         }
 
+        private void generarDFA_Click(object sender, EventArgs e)
+        {
+            Console.WriteLine("adasf");
+            //concatenar tokens para generar expresion regular
+            string expresion = "";
+            List<string> allTokens = tokens.Values.ToList();
+            
+            for (int i = 0; i < allTokens.Count; i++)
+            {
+                if (i == allTokens.Count - 1)
+                {
+                    expresion += allTokens[i];
+                    expresion += "#";
+                }
+                else
+                {
+                    expresion += allTokens[i];
+                    expresion += '|';
+                }
+            }
 
+            textBox2.Text = expresion;
+        }
     }
 }
