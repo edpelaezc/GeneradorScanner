@@ -20,7 +20,7 @@ namespace AnalizadorLexico
         string path = "";  
         //estructuras para guardar los datos del archivo 
         Dictionary<string, List<int>> alfabeto = new Dictionary<string, List<int>>();
-        Dictionary<string, string> tokens = new Dictionary<string, string>();
+        Dictionary<string, List<string>> tokens = new Dictionary<string, List<string>>();
         Dictionary<int, string> actions = new Dictionary<int, string>();
         Dictionary<string, int> errores = new Dictionary<string, int>();
         List<string> auxActions = new List<string>();
@@ -85,7 +85,7 @@ namespace AnalizadorLexico
                         if (line.ToUpper().Trim() != "RESERVADAS()")
                         {
                             alfabeto = new Dictionary<string, List<int>>();
-                            tokens = new Dictionary<string, string>();
+                            tokens = new Dictionary<string, List<string>>();
                             error = true;
                             MessageBox.Show("ERROR DE FORMATO\n\t" + line);                            
                         }
@@ -96,7 +96,7 @@ namespace AnalizadorLexico
                             if (line.Trim() != "{")
                             {
                                 alfabeto = new Dictionary<string, List<int>>();
-                                tokens = new Dictionary<string, string>();
+                                tokens = new Dictionary<string, List<string>>();
                                 error = true;
                                 MessageBox.Show("ERROR DE FORMATO, NO CONTIENE \'{\' DESPUES DE \"RESERVADAS()\"\n" + archivo);
                             }
@@ -115,7 +115,7 @@ namespace AnalizadorLexico
                                 if (line.Trim() != "}")
                                 {
                                     alfabeto = new Dictionary<string, List<int>>();
-                                    tokens = new Dictionary<string, string>();
+                                    tokens = new Dictionary<string, List<string>>();
                                     auxActions = new List<string>();
                                     path = "";
                                     error = true;
@@ -349,7 +349,7 @@ namespace AnalizadorLexico
                                     if (tokenAux.Contains(keysIn[i] + keysIn[j]))
                                     {
                                         alfabeto = new Dictionary<string, List<int>>();
-                                        tokens = new Dictionary<string, string>();
+                                        tokens = new Dictionary<string, List<string>>();
                                         error = true;
                                         MessageBox.Show("ERROR DE FORMATO, LAS CLAVES ESTÁN CONCATENADAS\n\t" + cadena);                                        
                                         tokenRechazado = true;
@@ -361,11 +361,11 @@ namespace AnalizadorLexico
                             if (!tokenRechazado)//el token paso validaciones generales
                             {
                                 //leer token y procesarlo 
-                                string succesToken = obtenerToken(tokenAux);
+                                List<string> succesToken = obtenerToken(tokenAux);
 
-                                if (succesToken == "") {
+                                if (succesToken.Count == 0) {
                                     alfabeto = new Dictionary<string, List<int>>();
-                                    tokens = new Dictionary<string, string>();
+                                    tokens = new Dictionary<string, List<string>>();
                                     MessageBox.Show("ERROR EN EL FORMATO DEL TOKEN\n\t" + cadena);
                                     error = true;
                                 }
@@ -379,7 +379,7 @@ namespace AnalizadorLexico
                                     catch (ArgumentException e)
                                     {
                                         alfabeto = new Dictionary<string, List<int>>();
-                                        tokens = new Dictionary<string, string>();
+                                        tokens = new Dictionary<string, List<string>>();
                                         error = true;
                                         MessageBox.Show("EL TOKEN YA EXISTE\n\t" + cadena);                                        
                                     }
@@ -389,7 +389,7 @@ namespace AnalizadorLexico
                         }//error de formato en el token
                         else {
                             alfabeto = new Dictionary<string, List<int>>();
-                            tokens = new Dictionary<string, string>();
+                            tokens = new Dictionary<string, List<string>>();
                             error = true;
                             MessageBox.Show("ERROR DE FORMATO, NOMBRE DE TOKEN INVÁLIDO\n\t" + cadena);
                         }
@@ -397,7 +397,7 @@ namespace AnalizadorLexico
                     else
                     {
                         alfabeto = new Dictionary<string, List<int>>();
-                        tokens = new Dictionary<string, string>();
+                        tokens = new Dictionary<string, List<string>>();
                         error = true;
                         MessageBox.Show("ERROR DE FORMATO, NO CONTIENE LA PALARA \'TOKEN\'\n\t" + cadena);
                     }
@@ -406,7 +406,7 @@ namespace AnalizadorLexico
                 else
                 {
                     alfabeto = new Dictionary<string, List<int>>();
-                    tokens = new Dictionary<string, string>();
+                    tokens = new Dictionary<string, List<string>>();
                     error = true;
                     MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\'\n\t" + cadena);
                 }
@@ -418,43 +418,66 @@ namespace AnalizadorLexico
         /// Recibe la cadena del token entera desde el simbolo '=' hasta el final de la cadena. 
         /// </summary>
         /// <param name="cadena">Token completo</param>
-        public string obtenerToken(string cadena) {
-            cadena = cadena.Trim();            
-            string response = "";
+        public List<string> obtenerToken(string cadena) {
+            cadena = cadena.Trim();
+            List<string> response = new List<string>();
             string aux = "";
             
             for (int j = 0; j < cadena.Length; j++)
             {
                 if (cadena[j] == ' ')
                 {
-                    response += aux;
-
-                    if (cadena[j + 1] != '?' && cadena[j + 1] != '+' && cadena[j + 1] != '*' && cadena[j + 1] != ')' && cadena[j + 1] != '|' && cadena[j - 1] != '(' && cadena[j - 1] != '|')
+                    if (aux != "")
                     {
-                        response += '.';
+                        response.Add(aux);
                     }
-                    aux = "";
-                }
-                else if (cadena[j] == '\'')
-                {
-                    if (cadena[j + 2] != '\'') //si no está cerrada la comilla simple sale del ciclo y devuelve token invalido
+                    Console.WriteLine(aux);
+                    if (!alfabeto.Keys.ToList().Contains(aux) && aux != "" && aux != ")" && aux != "(" && aux != "|" && aux != "?")
                     {
-                        response = "";
                         aux = "";
                         j = cadena.Length;
                     }
                     else
                     {
-                        aux += cadena[j + 1];
+                        if (cadena[j + 1] != '?' && cadena[j + 1] != '+' && cadena[j + 1] != '*' && cadena[j + 1] != ')' && cadena[j + 1] != '|' && cadena[j - 1] != '(' && cadena[j - 1] != '|')
+                        {
+                            response.Add(".");
+                        }
+                        aux = "";
+                    }
+                }
+                else if (cadena[j] == '\'')
+                {
+                    if (cadena[j + 2] != '\'') //si no está cerrada la comilla simple sale del ciclo y devuelve token invalido
+                    {
+                        aux = "";
+                        j = cadena.Length;
+                    }
+                    else
+                    {
+                        response.Add(cadena[j + 1].ToString());
+                        aux = "";
                         j += 2;
                     }
                 }
                 else
                 {
-                    aux += cadena[j];
+                    if (cadena[j] == '(' || cadena[j] == ')' || cadena[j] == '*' || cadena[j] == '+' || cadena[j] == '|' || cadena[j] == '?')
+                    {
+                        response.Add(cadena[j].ToString());
+                    }
+                    else
+                    {
+                        aux += cadena[j];
+                    }                    
                 }
             }
-            response += aux;
+
+
+            if (aux != "")
+            {
+                response.Add(aux);
+            }            
 
 
             return response;
@@ -494,7 +517,7 @@ namespace AnalizadorLexico
                                 catch (ArgumentException e)
                                 {
                                     alfabeto = new Dictionary<string, List<int>>();
-                                    tokens = new Dictionary<string, string>();
+                                    tokens = new Dictionary<string, List<string>>();
                                     auxActions = new List<string>();
                                     actions = new Dictionary<int, string>();
                                     error = true;
@@ -504,7 +527,7 @@ namespace AnalizadorLexico
                             else
                             {
                                 alfabeto = new Dictionary<string, List<int>>();
-                                tokens = new Dictionary<string, string>();
+                                tokens = new Dictionary<string, List<string>>();
                                 actions = new Dictionary<int, string>();
                                 auxActions = new List<string>();
                                 i = reservadas.Count;
@@ -515,7 +538,7 @@ namespace AnalizadorLexico
                         else
                         {
                             alfabeto = new Dictionary<string, List<int>>();
-                            tokens = new Dictionary<string, string>();
+                            tokens = new Dictionary<string, List<string>>();
                             actions = new Dictionary<int, string>();
                             auxActions = new List<string>();
                             i = reservadas.Count;
@@ -526,7 +549,7 @@ namespace AnalizadorLexico
                     else //ERROR EN EL FORMATO
                     {
                         alfabeto = new Dictionary<string, List<int>>();
-                        tokens = new Dictionary<string, string>();
+                        tokens = new Dictionary<string, List<string>>();
                         actions = new Dictionary<int, string>();
                         auxActions = new List<string>();
                         i = reservadas.Count;
@@ -555,7 +578,7 @@ namespace AnalizadorLexico
                     catch (ArgumentException)
                     {
                         alfabeto = new Dictionary<string, List<int>>();
-                        tokens = new Dictionary<string, string>();
+                        tokens = new Dictionary<string, List<string>>();
                         auxActions = new List<string>();
                         actions = new Dictionary<int, string>();
                         errores = new Dictionary<string, int>();
@@ -566,7 +589,7 @@ namespace AnalizadorLexico
                 else
                 {
                     alfabeto = new Dictionary<string, List<int>>();
-                    tokens = new Dictionary<string, string>();
+                    tokens = new Dictionary<string, List<string>>();
                     auxActions = new List<string>();
                     actions = new Dictionary<int, string>();
                     errores = new Dictionary<string, int>();
@@ -577,7 +600,7 @@ namespace AnalizadorLexico
             else //ERROR EN EL FORMATO
             {
                 alfabeto = new Dictionary<string, List<int>>();
-                tokens = new Dictionary<string, string>();
+                tokens = new Dictionary<string, List<string>>();
                 auxActions = new List<string>();
                 actions = new Dictionary<int, string>();
                 errores = new Dictionary<string, int>();
@@ -588,26 +611,54 @@ namespace AnalizadorLexico
 
         private void generarDFA_Click(object sender, EventArgs e)
         {
+            DFA funcionesDFA = new DFA();
             Console.WriteLine("adasf");
             //concatenar tokens para generar expresion regular
-            string expresion = "";
-            List<string> allTokens = tokens.Values.ToList();
+            string expresion = "";            
+            List<List<string>> allTokens = tokens.Values.ToList();
+            List<string> final = new List<string>();
+            final.Add("#");
+            allTokens.Add(final);
             
             for (int i = 0; i < allTokens.Count; i++)
             {
                 if (i == allTokens.Count - 1)
                 {
-                    expresion += allTokens[i];
-                    expresion += "#";
+                    expresion += '(';
+                    List<string> aux = allTokens[i];
+                    for (int j = 0; j < allTokens[i].Count; j++)
+                    {
+                        expresion += aux[j];
+                    }
+                    expresion += ')';
+                    expresion += ".#";                                      
+
                 }
                 else
                 {
-                    expresion += allTokens[i];
+                    expresion += '(';
+                    List<string> aux = allTokens[i];
+                    for (int j = 0; j < allTokens[i].Count; j++)
+                    {
+                        expresion += aux[j];
+                    }
+                    expresion += ')';
                     expresion += '|';
                 }
             }
 
             textBox2.Text = expresion;
+            //transformar a postfijo todos los tokens
+            for (int i = 0; i < allTokens.Count; i++)
+            {
+                allTokens[i] = funcionesDFA.transformarPostfijo(allTokens[i]);
+            }            
+            
         }
+
+
+
+
+
     }
 }
