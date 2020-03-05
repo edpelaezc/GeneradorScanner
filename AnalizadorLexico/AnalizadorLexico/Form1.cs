@@ -659,12 +659,29 @@ namespace AnalizadorLexico
                 allTokens[i] = funcionesDFA.transformarPostfijo(allTokens[i]);
             }
 
+            //obtener los token en sus respectivos árboles de expresión
             List<Nodo> nodos = new List<Nodo>();
             for (int i = 0; i < allTokens.Count; i++)
             {
                 if (allTokens[i].Count != 1)
-                {
-                    nodos.Add(funcionesDFA.obtenerArbol(allTokens[i]));
+                {                    
+                    if (!allTokens[i].Contains("+") && !allTokens[i].Contains("*") && !allTokens[i].Contains("?") && !allTokens[i].Contains("|"))
+                    {
+                        Nodo concatenado = new Nodo();
+                        List<string> auxiliar = allTokens[i];
+                        string cadena = "";
+                        for (int j = 0; j < auxiliar.Count; j++)
+                        {
+                            cadena += auxiliar[j];
+                        }
+
+                        concatenado.valor = cadena;
+                        nodos.Add(concatenado);
+                    }
+                    else
+                    {
+                        nodos.Add(funcionesDFA.obtenerArbol(allTokens[i]));
+                    }
                 }
                 else
                 {
@@ -675,6 +692,30 @@ namespace AnalizadorLexico
                 }    
             }
 
+            List<Nodo> allNodes = new List<Nodo>();
+            //union de los nodos 
+            //raiz del arbol 
+            Nodo concat = new Nodo();
+            concat.valor = ".";
+            for (int i = 0; i < nodos.Count; i++)
+            {
+                if (i == nodos.Count - 2)
+                {                    
+                    allNodes.Add(nodos[i]);
+                    allNodes.Add(concat);
+                    i++;
+                    allNodes.Add(nodos[i]);
+                }
+                else
+                {
+                    allNodes.Add(nodos[i]);
+                    Nodo orNode = new Nodo();
+                    orNode.valor = "|";
+                    allNodes.Add(orNode);
+                }
+            }
+            
+            Nodo raiz = funcionesDFA.obtenerArbol(allNodes);
 
         }
 

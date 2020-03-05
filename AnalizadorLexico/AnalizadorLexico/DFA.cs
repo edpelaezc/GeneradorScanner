@@ -104,5 +104,69 @@ namespace AnalizadorLexico
 
             return salida; 
         }
+
+
+        public Nodo obtenerArbol(List<Nodo> nodos) {
+            Nodo salida = new Nodo();
+            Stack<Nodo> operadores = new Stack<Nodo>();
+            List<Nodo> response = new List<Nodo>();
+
+            //procesar en postfijo todos los nodos 
+            for (int i = 0; i < nodos.Count; i++)
+            {
+                if ((nodos[i].valor == "|" && nodos[i].derecho == null && nodos[i].izquierdo == null) || (nodos[i].valor == "." && nodos[i].derecho == null && nodos[i].izquierdo == null))
+                {
+                    if (operadores.Count != 0)
+                    {
+                        response.Add(operadores.Pop());
+                    }
+
+                    operadores.Push(nodos[i]);
+                }
+                else // es un operador
+                {
+                    response.Add(nodos[i]); //agregar al final de la lista de salida
+                }
+            }
+
+            //verificar si aún existen operadores en la pila
+            if (operadores.Count != 0)
+            {
+                int count = operadores.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    response.Add(operadores.Pop());
+                }
+            }
+           
+            //operar los nodos en postfijo
+            Stack<Nodo> operandos = new Stack<Nodo>();
+            while (response.Count != 0)
+            {
+                Nodo aux = response[0];
+                response.RemoveAt(0);
+
+                if ((aux.valor == "|" && aux.derecho == null && aux.izquierdo == null) || (aux.valor == "." && aux.derecho == null && aux.izquierdo == null))
+                {
+                    aux.derecho = operandos.Pop();
+                    aux.izquierdo = operandos.Pop();
+                    response.Insert(0, aux);
+                }
+                else
+                {
+                    operandos.Push(aux); // es un operando 
+                }
+            }
+
+            salida = operandos.Pop();
+
+
+            return salida;
+
+        }
+
+
+
+
     }
 }
