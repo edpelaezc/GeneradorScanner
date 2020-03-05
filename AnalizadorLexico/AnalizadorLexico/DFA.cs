@@ -68,16 +68,38 @@ namespace AnalizadorLexico
             return orden;
         }
 
-        public List<string> obtenerArboles(List<string> tokensEnPostfijo) { 
-            Stack<string> operadores = new Stack<string>();
-            List<string> salida = new List<string>();
+        public Nodo obtenerArbol(List<string> token) {
+            Nodo salida = new Nodo();
+            Stack<Nodo> operandos = new Stack<Nodo>();
+            List<Nodo> postfijo = new List<Nodo>();
 
+            for (int i = 0; i < token.Count; i++)
+            {
+                Nodo aux = new Nodo();
+                aux.valor = token[i];
+                postfijo.Add(aux);
+            }
 
-            //procesar cada token para quitar "(" y ")"
-            
-            string aux = "";
-            string response = "";
-            
+            for (int i = 0; i < token.Count; i++)
+            {
+                if (postfijo[i].valor == "|" || postfijo[i].valor == ".")
+                {
+                    postfijo[i].derecho = operandos.Pop();
+                    postfijo[i].izquierdo = operandos.Pop();                   
+                    operandos.Push(postfijo[i]);
+                }
+                else if (postfijo[i].valor == "+" || postfijo[i].valor == "*" || postfijo[i].valor == "?")
+                {
+                    postfijo[i].izquierdo = operandos.Pop();
+                    operandos.Push(postfijo[i]);
+                }
+                else
+                {
+                    operandos.Push(postfijo[i]); // es un operando 
+                }
+            }
+
+            salida = operandos.Pop();
 
 
             return salida; 

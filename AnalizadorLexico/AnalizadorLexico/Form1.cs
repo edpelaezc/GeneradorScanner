@@ -59,6 +59,8 @@ namespace AnalizadorLexico
             else
             {
                 error = true;
+                path = "";
+                openFile = new OpenFileDialog();
                 MessageBox.Show("TIENE QUE INGRESAR UN ARCHIVO");
             }
 
@@ -460,16 +462,18 @@ namespace AnalizadorLexico
                         j += 2;
                     }
                 }
+                else if (cadena[j] == '(' || cadena[j] == ')' || cadena[j] == '*' || cadena[j] == '+' || cadena[j] == '|' || cadena[j] == '?')
+                {
+                    if (aux != "")
+                    {
+                        response.Add(aux);
+                        aux = "";
+                    }
+                    response.Add(cadena[j].ToString());
+                }
                 else
                 {
-                    if (cadena[j] == '(' || cadena[j] == ')' || cadena[j] == '*' || cadena[j] == '+' || cadena[j] == '|' || cadena[j] == '?')
-                    {
-                        response.Add(cadena[j].ToString());
-                    }
-                    else
-                    {
-                        aux += cadena[j];
-                    }                    
+                    aux += cadena[j];
                 }
             }
 
@@ -616,9 +620,6 @@ namespace AnalizadorLexico
             //concatenar tokens para generar expresion regular
             string expresion = "";            
             List<List<string>> allTokens = tokens.Values.ToList();
-            List<string> final = new List<string>();
-            final.Add("#");
-            allTokens.Add(final);
             
             for (int i = 0; i < allTokens.Count; i++)
             {
@@ -648,12 +649,33 @@ namespace AnalizadorLexico
             }
 
             textBox2.Text = expresion;
+
+            List<string> final = new List<string>();
+            final.Add("#");
+            allTokens.Add(final);
             //transformar a postfijo todos los tokens
             for (int i = 0; i < allTokens.Count; i++)
             {
                 allTokens[i] = funcionesDFA.transformarPostfijo(allTokens[i]);
-            }            
-            
+            }
+
+            List<Nodo> nodos = new List<Nodo>();
+            for (int i = 0; i < allTokens.Count; i++)
+            {
+                if (allTokens[i].Count != 1)
+                {
+                    nodos.Add(funcionesDFA.obtenerArbol(allTokens[i]));
+                }
+                else
+                {
+                    Nodo aux = new Nodo();
+                    List<string> auxList = allTokens[i];
+                    aux.valor = auxList[0];
+                    nodos.Add(aux);
+                }    
+            }
+
+
         }
 
 
