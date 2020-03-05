@@ -716,7 +716,7 @@ namespace AnalizadorLexico
             }
             
             Nodo raiz = funcionesDFA.obtenerArbol(allNodes);
-
+            funcionesDFA.calcularNulabilidad(raiz);
         }
 
 

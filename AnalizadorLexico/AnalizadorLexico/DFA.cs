@@ -166,6 +166,51 @@ namespace AnalizadorLexico
         }
 
 
+        public void calcularNulabilidad(Nodo root) {
+            if (root != null)
+            {
+                if (root.valor == "|")
+                {
+                    if (root.derecho.nullable == true || root.izquierdo.nullable == true)
+                        root.nullable = true;
+                    else
+                        root.nullable = false;
+                }
+                else if (root.valor == ".")
+                {
+                    if (root.derecho.nullable == true && root.izquierdo.nullable == true)
+                        root.nullable = true;
+                    else
+                        root.nullable = false;
+                }
+                else if (root.valor == "*")
+                {
+                    root.nullable = true;
+                }
+                else if (root.valor == "+")
+                {
+                    root.nullable = false;
+                }
+                else if (root.valor == "?")
+                {
+                    root.nullable = false;
+                }
+                else
+                {
+                    root.nullable = false;
+                    //not null -> false 
+                    //null -> true
+                }
+
+                calcularNulabilidad(root.izquierdo);
+                calcularNulabilidad(root.derecho);                
+            }            
+        }
+
+        public void first() { }
+        public void last() { }
+        public void follow() { }
+
 
 
     }
