@@ -23,6 +23,7 @@ namespace AnalizadorLexico
         Dictionary<string, List<string>> tokens = new Dictionary<string, List<string>>();
         Dictionary<int, string> actions = new Dictionary<int, string>();
         Dictionary<string, int> errores = new Dictionary<string, int>();
+        Dictionary<int, List<int>> follow = new Dictionary<int, List<int>>();
         List<string> auxActions = new List<string>();
 
         public GUI()
@@ -378,7 +379,7 @@ namespace AnalizadorLexico
                                     {
                                         tokens.Add(auxNombre, succesToken);
                                     }
-                                    catch (ArgumentException e)
+                                    catch (ArgumentException)
                                     {
                                         alfabeto = new Dictionary<string, List<int>>();
                                         tokens = new Dictionary<string, List<string>>();
@@ -518,7 +519,7 @@ namespace AnalizadorLexico
                                     palabra = palabra.Replace("\'", "");
                                     actions.Add(int.Parse(numero), palabra);
                                 }
-                                catch (ArgumentException e)
+                                catch (ArgumentException)
                                 {
                                     alfabeto = new Dictionary<string, List<int>>();
                                     tokens = new Dictionary<string, List<string>>();
@@ -683,7 +684,7 @@ namespace AnalizadorLexico
                         nodos.Add(funcionesDFA.obtenerArbol(allTokens[i]));
                     }
                 }
-                else
+                else //si son solo símbolos
                 {
                     Nodo aux = new Nodo();
                     List<string> auxList = allTokens[i];
@@ -715,8 +716,12 @@ namespace AnalizadorLexico
                 }
             }
             
-            Nodo raiz = funcionesDFA.obtenerArbol(allNodes);
+            //calcular first, last, follow haciendo uso de recorrido postfijo en el árbol.
+            Nodo raiz = funcionesDFA.obtenerArbolCompleto(allNodes);
             funcionesDFA.calcularNulabilidad(raiz);
+            funcionesDFA.contarNodosHoja(raiz);
+            funcionesDFA.first(raiz);
+            funcionesDFA.last(raiz);
         }
 
 

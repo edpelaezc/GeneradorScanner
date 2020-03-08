@@ -94,7 +94,7 @@ namespace AnalizadorLexico
                     operandos.Push(postfijo[i]);
                 }
                 else
-                {
+                {                    
                     operandos.Push(postfijo[i]); // es un operando 
                 }
             }
@@ -106,7 +106,7 @@ namespace AnalizadorLexico
         }
 
 
-        public Nodo obtenerArbol(List<Nodo> nodos) {
+        public Nodo obtenerArbolCompleto(List<Nodo> nodos) {
             Nodo salida = new Nodo();
             Stack<Nodo> operadores = new Stack<Nodo>();
             List<Nodo> response = new List<Nodo>();
@@ -165,6 +165,21 @@ namespace AnalizadorLexico
 
         }
 
+        int contador = 0;
+        public void contarNodosHoja(Nodo root) {
+            if (root != null)
+            {
+                contarNodosHoja(root.izquierdo);
+                contarNodosHoja(root.derecho);
+
+                if (root.derecho == null && root.izquierdo == null) { 
+                    contador++;
+                    root.num = contador;
+                    Console.WriteLine(root.valor + ", " + root.num);
+                }
+            }
+        }
+
 
         public void calcularNulabilidad(Nodo root) {
             if (root != null)
@@ -207,8 +222,79 @@ namespace AnalizadorLexico
             }            
         }
 
-        public void first() { }
-        public void last() { }
+        public void first(Nodo root) {
+            if (root != null)
+            {
+                first(root.izquierdo);
+                first(root.derecho);
+
+                if (root.valor == "|")
+                {
+                    root.first.AddRange(root.izquierdo.first);
+                    root.first.AddRange(root.derecho.first);
+                    root.first.Sort();
+                }
+                else if (root.valor == ".")
+                {
+                    if (root.izquierdo.nullable == true)
+                    {
+                        root.first.AddRange(root.izquierdo.first);
+                        root.first.AddRange(root.derecho.first);
+                        root.first.Sort();
+                    }
+                    else
+                    {
+                        root.first.AddRange(root.izquierdo.first);                        
+                    }
+                }
+                else if ((root.valor == "*" || root.valor == "+" || root.valor == "?") && (root.izquierdo != null) )
+                {//se determina que es un operador unario
+                    root.first.AddRange(root.izquierdo.first);
+                }
+                else 
+                {
+                    //es un nodo con simbolo terminal, nodo hoja
+                    root.first.Add(root.num);
+                }
+            }
+        }
+
+        public void last(Nodo root) {
+            if (root != null)
+            {
+                last(root.izquierdo);
+                last(root.derecho);
+
+                if (root.valor == "|")
+                {
+                    root.last.AddRange(root.izquierdo.last);
+                    root.last.AddRange(root.derecho.last);
+                    root.last.Sort();
+                }
+                else if (root.valor == ".")
+                {
+                    if (root.derecho.nullable == true)
+                    {
+                        root.last.AddRange(root.izquierdo.last);
+                        root.last.AddRange(root.derecho.last);
+                        root.last.Sort();
+                    }
+                    else
+                    {
+                        root.last.AddRange(root.derecho.last);
+                    }
+                }
+                else if ((root.valor == "*" || root.valor == "+" || root.valor == "?") && (root.izquierdo != null))
+                {
+                    root.last.AddRange(root.izquierdo.last);
+                }
+                else 
+                {
+                    //es un nodo con simbolo terminal, nodo hoja
+                    root.last.Add(root.num);
+                }
+            }
+        }
         public void follow() { }
 
 
