@@ -45,7 +45,8 @@ namespace AnalizadorLexico
         }
 
         private void leerArchivo_Click(object sender, EventArgs e)
-        {           
+        {
+            error = false;
             string current = "";
             string line = "";
             string archivo = "";
@@ -62,6 +63,7 @@ namespace AnalizadorLexico
                 error = true;
                 path = "";
                 openFile = new OpenFileDialog();
+                fileReader = null;
                 MessageBox.Show("TIENE QUE INGRESAR UN ARCHIVO");
             }
 
@@ -722,6 +724,9 @@ namespace AnalizadorLexico
             funcionesDFA.contarNodosHoja(raiz);
             funcionesDFA.first(raiz);
             funcionesDFA.last(raiz);
+            funcionesDFA.inicializarDiccionario();
+            funcionesDFA.calcularFollow(raiz);            
+            follow = funcionesDFA.getFollow();
         }
 
 

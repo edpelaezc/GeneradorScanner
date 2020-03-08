@@ -8,6 +8,7 @@ namespace AnalizadorLexico
 {
     class DFA
     {
+        Dictionary<int, List<int>> response = new Dictionary<int, List<int>>();
         public List<string> transformarPostfijo(List<string> infijo)
         {
             Stack<string> operadores = new Stack<string>();
@@ -184,29 +185,29 @@ namespace AnalizadorLexico
         public void calcularNulabilidad(Nodo root) {
             if (root != null)
             {
-                if (root.valor == "|")
+                if (root.valor == "|" && root.derecho != null && root.izquierdo != null)
                 {
                     if (root.derecho.nullable == true || root.izquierdo.nullable == true)
                         root.nullable = true;
                     else
                         root.nullable = false;
                 }
-                else if (root.valor == ".")
+                else if (root.valor == "." && root.derecho != null && root.izquierdo != null)
                 {
                     if (root.derecho.nullable == true && root.izquierdo.nullable == true)
                         root.nullable = true;
                     else
                         root.nullable = false;
                 }
-                else if (root.valor == "*")
+                else if (root.valor == "*" && root.izquierdo != null)
                 {
                     root.nullable = true;
                 }
-                else if (root.valor == "+")
+                else if (root.valor == "+" && root.izquierdo != null)
                 {
                     root.nullable = false;
                 }
-                else if (root.valor == "?")
+                else if (root.valor == "?" && root.izquierdo != null)
                 {
                     root.nullable = false;
                 }
@@ -228,13 +229,13 @@ namespace AnalizadorLexico
                 first(root.izquierdo);
                 first(root.derecho);
 
-                if (root.valor == "|")
+                if (root.valor == "|" && root.derecho != null && root.izquierdo != null)
                 {
                     root.first.AddRange(root.izquierdo.first);
                     root.first.AddRange(root.derecho.first);
                     root.first.Sort();
                 }
-                else if (root.valor == ".")
+                else if (root.valor == "." && root.derecho != null && root.izquierdo != null)
                 {
                     if (root.izquierdo.nullable == true)
                     {
@@ -265,13 +266,13 @@ namespace AnalizadorLexico
                 last(root.izquierdo);
                 last(root.derecho);
 
-                if (root.valor == "|")
+                if (root.valor == "|" && root.derecho != null && root.izquierdo != null)
                 {
                     root.last.AddRange(root.izquierdo.last);
                     root.last.AddRange(root.derecho.last);
                     root.last.Sort();
                 }
-                else if (root.valor == ".")
+                else if (root.valor == "." && root.derecho != null && root.izquierdo != null)
                 {
                     if (root.derecho.nullable == true)
                     {
@@ -295,8 +296,49 @@ namespace AnalizadorLexico
                 }
             }
         }
-        public void follow() { }
 
+        public void inicializarDiccionario() {
+            for (int i = 1; i <= contador; i++)
+            {
+                response.Add(i, new List<int> { });
+            }
+        }
+
+        public void calcularFollow(Nodo root) {
+            if (root != null)
+            {
+                calcularFollow(root.izquierdo);
+                calcularFollow(root.derecho);                
+
+                if (root.valor == "." && root.derecho != null && root.izquierdo != null)
+                {
+                    for (int i = 0; i < root.izquierdo.last.Count; i++)
+                    {
+                        for (int j = 0; j < response.Count; j++)
+                        {
+                            if (response.Keys.ToList()[j] == root.izquierdo.last[i])
+                            {
+                                response.Values.ToList()[j].AddRange(root.derecho.first);
+                                response.Values.ToList()[j].Sort();
+                                response.Values.ToList()[j] = response.Values.ToList()[j].Distinct().ToList();
+                            }
+                        }
+                    }
+                }
+                else if (root.valor == "*"  && root.izquierdo != null)
+                {
+
+                }
+                else if (root.valor == "+" && root.izquierdo != null)
+                {
+
+                }
+            }                                
+        }
+
+        public Dictionary<int, List<int>> getFollow() {
+            return response;
+        }
 
 
     }
