@@ -325,13 +325,20 @@ namespace AnalizadorLexico
                         }
                     }
                 }
-                else if (root.valor == "*"  && root.izquierdo != null)
+                else if ((root.valor == "*" || root.valor == "+" ) && root.izquierdo != null)
                 {
-
-                }
-                else if (root.valor == "+" && root.izquierdo != null)
-                {
-
+                    for (int i = 0; i < root.izquierdo.last.Count; i++)
+                    {
+                        for (int j = 0; j < response.Count; j++)
+                        {
+                            if (response.Keys.ToList()[j] == root.izquierdo.last[i])
+                            {
+                                response.Values.ToList()[j].AddRange(root.izquierdo.first);
+                                response.Values.ToList()[j].Sort();
+                                response.Values.ToList()[j] = response.Values.ToList()[j].Distinct().ToList();
+                            }
+                        }
+                    }
                 }
             }                                
         }
