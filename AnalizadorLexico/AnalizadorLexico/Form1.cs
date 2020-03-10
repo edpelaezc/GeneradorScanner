@@ -270,6 +270,7 @@ namespace AnalizadorLexico
         }
 
         public bool validarIgual(string cadena) {
+            cadena = quitarEspacios(cadena);
             Console.WriteLine(cadena.IndexOf('='));
             return cadena.IndexOf('=') != -1;
         }
@@ -618,8 +619,7 @@ namespace AnalizadorLexico
 
         private void generarDFA_Click(object sender, EventArgs e)
         {
-            DFA funcionesDFA = new DFA();
-            Console.WriteLine("adasf");
+            DFA funcionesDFA = new DFA();            
             //concatenar tokens para generar expresion regular
             string expresion = "";            
             List<List<string>> allTokens = tokens.Values.ToList();
@@ -666,22 +666,31 @@ namespace AnalizadorLexico
             List<Nodo> nodos = new List<Nodo>();
             for (int i = 0; i < allTokens.Count; i++)
             {
-                if (allTokens[i].Count != 1)
-                {                    
+                if (allTokens[i].Count != 1) // si el token contiene más de un simbolo
+                {
+                    // si tiene más de un simbolo pero no tiene operadores 
                     if (!allTokens[i].Contains("+") && !allTokens[i].Contains("*") && !allTokens[i].Contains("?") && !allTokens[i].Contains("|"))
                     {
-                        Nodo concatenado = new Nodo();
+                        List<string> newList = new List<string>();
                         List<string> auxiliar = allTokens[i];
-                        string cadena = "";
+                        
                         for (int j = 0; j < auxiliar.Count; j++)
-                        {
-                            cadena += auxiliar[j];
+                        {                                                                                    
+                            if (j == auxiliar.Count - 1)
+                            {
+                                newList.Add(auxiliar[j]);
+                            }
+                            else
+                            {
+                                newList.Add(auxiliar[j]);
+                                newList.Add(".");
+                            }
                         }
 
-                        concatenado.valor = cadena;
-                        nodos.Add(concatenado);
+                        newList = funcionesDFA.transformarPostfijo(newList);
+                        nodos.Add(funcionesDFA.obtenerArbol(newList)); 
                     }
-                    else
+                    else //contiene operadores 
                     {
                         nodos.Add(funcionesDFA.obtenerArbol(allTokens[i]));
                     }
@@ -724,13 +733,84 @@ namespace AnalizadorLexico
             funcionesDFA.contarNodosHoja(raiz);
             funcionesDFA.first(raiz);
             funcionesDFA.last(raiz);
-            funcionesDFA.inicializarDiccionario();
-            funcionesDFA.calcularFollow(raiz);            
+            funcionesDFA.inicializarDiccionario(); //inicializa los valores del diccionario con listas vacías 
+            funcionesDFA.calcularFollow(raiz);  //calcula los follow de cada hoja, ingresa los follow al diccionario 
             follow = funcionesDFA.getFollow();
+            funcionesDFA.obtenerTerminales(raiz); // obtener simbolos terminales para poder calcular las transiciones
+            funcionesDFA.simbolosTerminales = funcionesDFA.simbolosTerminales.Distinct().ToList();
+            funcionesDFA.modificarTerminales(); //eliminar el elemento # de los simbolos terminales 
+            //el estado principal es el first de la raíz 
+            Estado inicial = new Estado(1, raiz.first);
+            inicial.numero = 1;
+            funcionesDFA.agregarEstado(inicial);
+            //calcula las transiciones del estado inicial 
+            funcionesDFA.calcularTransiciones(inicial);
+            funcionesDFA.verificarNuevosEstados();
+            //si hay más conjuntos determina sus transiociones
+            funcionesDFA.determinarTransiciones();
+
+            List<Estado> estados = funcionesDFA.estados;
+            List<Transicion> transiciones = funcionesDFA.transiciones;
+            List<string> encabezado = funcionesDFA.simbolosTerminales;
+            //armar tabla de transiciones
+            int filas = estados.Count;
+            int columnas = encabezado.Count;
+            string[,] tablaTransiciones = new string[filas, columnas];
+
+            for (int i = 0; i < filas; i++)//fijar las filas de la matriz 
+            {
+                for (int j = 0; j < transiciones.Count; j++) //recorrer las transiciones existentes
+                {
+                    if (transiciones[j].origen == estados[i]) //si la transicion es igual al encabezado de fila
+                    {
+                        for (int k = 0; k < encabezado.Count; k++)
+                        {
+                            if (transiciones[j].simbolo == encabezado[k])
+                            {
+                                string conjunto = string.Join(",", transiciones[j].destino.conjunto.ToArray());
+                                tablaTransiciones[i, k] = transiciones[j].destino.numero.ToString() + "{" + conjunto + "}";
+                                k = encabezado.Count;
+                            }                            
+                        }
+                    }
+                }
+            }
+
+
+            //agregar encabezado
+            for (int i = 0; i < columnas + 1; i++)
+            {
+                if (i == 0)
+                {
+                    dataGridView1.Columns.Add("ESTADOS", "ESTADOS");
+                }
+                else
+                {
+                    dataGridView1.Columns.Add("simbolo" + i , encabezado[i - 1]);
+                }
+            }
+
+            dataGridView1.Rows.Add(estados.Count);
+            //mostrar estados
+            for (int i = 0; i < filas; i++)
+            {
+                string conjunto = string.Join(",", estados[i].conjunto.ToArray());
+                dataGridView1.Rows[i].Cells[0].Value = estados[i].numero + "{" + conjunto + "}";
+            }
+
+            //mostrar transiciones
+            for (int i = 0; i < filas; i++)
+            {
+                for (int j = 1; j < columnas + 1; j++)
+                {
+                    dataGridView1.Rows[i].Cells[j].Value = tablaTransiciones[i, j -1];
+                }
+            }
+
+
         }
 
-
-
+        
 
 
     }

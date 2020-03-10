@@ -9,6 +9,11 @@ namespace AnalizadorLexico
     class DFA
     {
         Dictionary<int, List<int>> response = new Dictionary<int, List<int>>();
+        List<Nodo> terminales = new List<Nodo>();
+        public List<string> simbolosTerminales = new List<string>();
+        public List<Estado> estados = new List<Estado>();
+        public List<Transicion> transiciones = new List<Transicion>();
+
         public List<string> transformarPostfijo(List<string> infijo)
         {
             Stack<string> operadores = new Stack<string>();
@@ -346,6 +351,111 @@ namespace AnalizadorLexico
         public Dictionary<int, List<int>> getFollow() {
             return response;
         }
+
+
+        public void obtenerTerminales(Nodo root) {
+            if (root != null)
+            {
+                obtenerTerminales(root.izquierdo);
+                obtenerTerminales(root.derecho);               
+
+                if (root.derecho == null && root.izquierdo == null)
+                {
+                    terminales.Add(root);
+                    simbolosTerminales.Add(root.valor);
+                }
+            }
+        }
+
+        public void agregarEstado(Estado estado) {
+            estados.Add(estado);
+        }
+
+        public void modificarTerminales() {
+            simbolosTerminales.Remove("#");
+        }
+
+        public void calcularTransiciones(Estado estado) {
+            //recorrer símbolos terminales
+            for (int i = 0; i < simbolosTerminales.Count; i++)
+            {
+                Transicion auxTransicion = new Transicion();
+                
+                for (int j = 0; j < estado.conjunto.Count; j++)
+                {
+                    if (terminales[estado.conjunto[j] - 1].valor == simbolosTerminales[i])
+                    {                        
+                        auxTransicion.destino.conjunto.AddRange(response[estado.conjunto[j]]);
+                        auxTransicion.destino.conjunto.Sort();
+                        auxTransicion.destino.conjunto = auxTransicion.destino.conjunto.Distinct().ToList();
+                    }
+                }
+
+                if (auxTransicion.destino.conjunto.Count != 0)
+                {
+                    auxTransicion.simbolo = simbolosTerminales[i];
+                    auxTransicion.origen = estado;
+                    transiciones.Add(auxTransicion);
+                }
+            }
+        }
+
+        public void verificarNuevosEstados() {
+            bool exists = false;
+            int posicion = 0;
+            //ver las transiciones del estado inicial
+            for (int i = 0; i < transiciones.Count; i++)
+            {
+                exists = false;
+                for (int j = 0; j < estados.Count; j++)
+                {
+                    if (compararConjuntos(estados[j].conjunto, transiciones[i].destino.conjunto) )
+                    {
+                        exists = true;
+                        posicion = estados[j].numero;
+                    }
+                }
+
+                if (exists)
+                {
+                    transiciones[i].destino.numero = posicion;
+                }
+                else //si no existía el conjunto
+                {
+                    int nuevoEstado = estados[estados.Count - 1].numero + 1;
+                    transiciones[i].destino.numero = nuevoEstado;
+                    estados.Add(transiciones[i].destino);
+                }
+
+            }
+        }
+
+
+        public bool compararConjuntos(List<int> conjunto1, List<int> conjunto2) {
+            return conjunto1.SequenceEqual(conjunto2);           
+        }
+
+        public void determinarTransiciones() {
+            int inicial = estados.Count; // numero de estados inicial 
+            int indice = 1;
+
+            do
+            {
+                inicial = estados.Count;
+                if (estados.Count != 1) // si hay más de un conjunto
+                {
+                    for (int i = indice; i < estados.Count; i++)
+                    {
+                        calcularTransiciones(estados[i]);
+                    }
+
+                    verificarNuevosEstados();
+                    indice = inicial;
+                }
+            } while (estados.Count != inicial);
+
+        }
+
 
 
     }
