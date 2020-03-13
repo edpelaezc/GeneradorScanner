@@ -73,6 +73,7 @@ namespace AnalizadorLexico
             {
                 error = true;
                 MessageBox.Show("EL ARCHIVO NO CONTIENE LA SECCIÓN DE \"TOKENS\"\n" + archivo);
+                Application.Restart();
             }
 
             while (line != null && error == false) //CICLO PRINCIPAL DE LECTURA
@@ -91,10 +92,9 @@ namespace AnalizadorLexico
                     {
                         if (line.ToUpper().Trim() != "RESERVADAS()")
                         {
-                            alfabeto = new Dictionary<string, List<int>>();
-                            tokens = new Dictionary<string, List<string>>();
                             error = true;
-                            MessageBox.Show("ERROR DE FORMATO\n\t" + line);                            
+                            MessageBox.Show("ERROR DE FORMATO\n\t" + line);
+                            Application.Restart();
                         }
                         else
                         {
@@ -103,10 +103,9 @@ namespace AnalizadorLexico
                             line = quitarEspacios(line);
                             if (line.Trim() != "{")
                             {
-                                alfabeto = new Dictionary<string, List<int>>();
-                                tokens = new Dictionary<string, List<string>>();
                                 error = true;
                                 MessageBox.Show("ERROR DE FORMATO, NO CONTIENE \'{\' DESPUES DE \"RESERVADAS()\"\n" + archivo);
+                                Application.Restart();
                             }
                             else
                             {                                
@@ -124,12 +123,9 @@ namespace AnalizadorLexico
 
                                 if (line.Trim() != "}")
                                 {
-                                    alfabeto = new Dictionary<string, List<int>>();
-                                    tokens = new Dictionary<string, List<string>>();
-                                    auxActions = new List<string>();
-                                    path = "";
                                     error = true;
                                     MessageBox.Show("ERROR DE FORMATO, NO CONTIENE \'}\'  DESPUES DE \"RESERVADAS()\"\n" + archivo);
+                                    Application.Restart();
                                 }
                                 else
                                 {
@@ -167,6 +163,7 @@ namespace AnalizadorLexico
                 {
                     error = true;
                     MessageBox.Show("EL ARCHIVO NO CONTIENE LA SECCIÓN DE ERRORES");
+                    Application.Restart();
                 }
                 else
                 {
@@ -257,17 +254,17 @@ namespace AnalizadorLexico
                                     }
                                 }
                                 else
-                                {
-                                    alfabeto = new Dictionary<string, List<int>>();
+                                {                                    
                                     error = true;
                                     MessageBox.Show("ERROR DE FORMATO EN LA FUNCION CHR, LINEA No." + cont + "\n\t" + cadena);
+                                    Application.Restart();
                                 }
                             }
                             else if (limites[0].Contains("CH") || limites[0].Contains("CR"))
-                            { // si está mal el formato de char
-                                alfabeto = new Dictionary<string, List<int>>();
+                            { // si está mal el formato de char                                
                                 error = true;
                                 MessageBox.Show("FUNCION CHR MAL ESCRITA, LINEA No." + cont + "\n\t" + cadena);
+                                Application.Restart();
                             }
                             else // agregar el rango al alfabeto
                             {
@@ -282,19 +279,19 @@ namespace AnalizadorLexico
                                     }
                                 }
                                 else
-                                {
-                                    alfabeto = new Dictionary<string, List<int>>();
+                                {                                    
                                     error = true;
                                     MessageBox.Show("ERROR DE FORMATO EN EL RANGO, LINEA No." + cont + "\n\t" + cadena);
+                                    Application.Restart();
                                 }
                             }
 
                         }
                         else if (conjuntos[i].Contains("."))
-                        { // esta mal el formato de rango 
-                            alfabeto = new Dictionary<string, List<int>>();
+                        { // esta mal el formato de rango                             
                             error = true;
                             MessageBox.Show("ERROR DE FORMATO EN EL RANGO, LINEA No." + cont + "\n\t" + cadena);
+                            Application.Restart();
                         }
                         else
                         { // es un elemento individual 
@@ -304,10 +301,10 @@ namespace AnalizadorLexico
                                 setAux.Add(aux);
                             }
                             else
-                            {
-                                alfabeto = new Dictionary<string, List<int>>();
+                            {                                
                                 error = true;
                                 MessageBox.Show("ERROR DE FORMATO EN LA DEFINICION DEL CARACTER, LINEA No." + cont + "\n\t" + cadena);
+                                Application.Restart();
                             }
                         }
                     }
@@ -318,10 +315,10 @@ namespace AnalizadorLexico
                     }
                 }// SI LA CADENA NO TIENE FORMATO ADECUADO
                 else
-                {
-                    alfabeto = new Dictionary<string, List<int>>();
+                {                    
                     error = true;
                     MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\', LINEA No." + cont + "\n\t" + cadena);
+                    Application.Restart();
                 }                            
             }            
         }
@@ -411,11 +408,10 @@ namespace AnalizadorLexico
                                 {
                                     if (tokenAux.Contains(keysIn[i] + keysIn[j]))
                                     {
-                                        alfabeto = new Dictionary<string, List<int>>();
-                                        tokens = new Dictionary<string, List<string>>();
                                         error = true;
                                         MessageBox.Show("ERROR DE FORMATO, LAS CLAVES ESTÁN CONCATENADAS, LINEA No." + cont + "\n\t" + cadena);                                        
                                         tokenRechazado = true;
+                                        Application.Restart();
                                     }
                                 }
                             }                            
@@ -427,10 +423,9 @@ namespace AnalizadorLexico
                                 List<string> succesToken = obtenerToken(tokenAux);
 
                                 if (succesToken.Count == 0) {
-                                    alfabeto = new Dictionary<string, List<int>>();
-                                    tokens = new Dictionary<string, List<string>>();
-                                    MessageBox.Show("ERROR EN EL FORMATO DEL TOKEN,LINEA No." + cont + "\n\t" + cadena);
                                     error = true;
+                                    MessageBox.Show("ERROR EN EL FORMATO DEL TOKEN,LINEA No." + cont + "\n\t" + cadena);                                    
+                                    Application.Restart();
                                 }
                                 else
                                 {
@@ -441,37 +436,33 @@ namespace AnalizadorLexico
                                     }
                                     catch (ArgumentException)
                                     {
-                                        alfabeto = new Dictionary<string, List<int>>();
-                                        tokens = new Dictionary<string, List<string>>();
                                         error = true;
-                                        MessageBox.Show("EL TOKEN YA EXISTE, LINEA No." + cont + "\n\t" + cadena);                                        
+                                        MessageBox.Show("EL TOKEN YA EXISTE, LINEA No." + cont + "\n\t" + cadena);
+                                        Application.Restart();
                                     }
                                     //Console.WriteLine("NOMBRE VALIDO");
                                 }
                             }
                         }//error de formato en el token
                         else {
-                            alfabeto = new Dictionary<string, List<int>>();
-                            tokens = new Dictionary<string, List<string>>();
                             error = true;
                             MessageBox.Show("ERROR DE FORMATO, NOMBRE DE TOKEN INVÁLIDO, LINEA No." + cont + "\n\t" + cadena);
+                            Application.Restart();
                         }
                     }
                     else
                     {
-                        alfabeto = new Dictionary<string, List<int>>();
-                        tokens = new Dictionary<string, List<string>>();
                         error = true;
                         MessageBox.Show("ERROR DE FORMATO, NO CONTIENE LA PALARA \'TOKEN\', LINEA No." + cont + "\n\t" + cadena);
+                        Application.Restart();
                     }
 
                 }//SI LA CADENA NO TIENE FORMATO ADECUADO 
                 else
                 {
-                    alfabeto = new Dictionary<string, List<int>>();
-                    tokens = new Dictionary<string, List<string>>();
                     error = true;
-                    MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\', LINEA No." + cont + "\n\t" + cadena);                    
+                    MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\', LINEA No." + cont + "\n\t" + cadena);
+                    Application.Restart();
                 }
 
             }
@@ -629,45 +620,33 @@ namespace AnalizadorLexico
                                 }
                                 catch (ArgumentException)
                                 {
-                                    alfabeto = new Dictionary<string, List<int>>();
-                                    tokens = new Dictionary<string, List<string>>();
-                                    auxActions = new List<string>();
-                                    actions = new Dictionary<int, string>();
                                     error = true;
                                     MessageBox.Show("LA PALABRA RESERVADA YA EXISTE, LINEA No." + cont + "\n\t" + aux);
+                                    Application.Restart();
                                 }
                             }
                             else
                             {
-                                alfabeto = new Dictionary<string, List<int>>();
-                                tokens = new Dictionary<string, List<string>>();
-                                actions = new Dictionary<int, string>();
-                                auxActions = new List<string>();
                                 i = reservadas.Count;
                                 error = true;
                                 MessageBox.Show("ERROR DE FORMATO, FALTA \', LINEA No." + cont + "\n\t" + aux);
+                                Application.Restart();
                             }
                         }
                         else
                         {
-                            alfabeto = new Dictionary<string, List<int>>();
-                            tokens = new Dictionary<string, List<string>>();
-                            actions = new Dictionary<int, string>();
-                            auxActions = new List<string>();
                             i = reservadas.Count;
                             error = true;
                             MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\', LINEA No." + cont + "\n\t" + aux);
+                            Application.Restart();
                         }
                     }
                     else //ERROR EN EL FORMATO
                     {
-                        alfabeto = new Dictionary<string, List<int>>();
-                        tokens = new Dictionary<string, List<string>>();
-                        actions = new Dictionary<int, string>();
-                        auxActions = new List<string>();
                         i = reservadas.Count;
                         error = true;
                         MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\', LINEA No." + cont + "\n\t" + aux);
+                        Application.Restart();
                     }
                 }                
             }
@@ -692,35 +671,23 @@ namespace AnalizadorLexico
                         }
                         catch (ArgumentException)
                         {
-                            alfabeto = new Dictionary<string, List<int>>();
-                            tokens = new Dictionary<string, List<string>>();
-                            auxActions = new List<string>();
-                            actions = new Dictionary<int, string>();
-                            errores = new Dictionary<string, int>();
                             error = true;
                             MessageBox.Show("EL ERROR YA EXISTE RESERVADA YA EXISTE, LINEA No." + cont + "\n\t" + cadena);
+                            Application.Restart();
                         }
                     }
                     else
                     {
-                        alfabeto = new Dictionary<string, List<int>>();
-                        tokens = new Dictionary<string, List<string>>();
-                        auxActions = new List<string>();
-                        actions = new Dictionary<int, string>();
-                        errores = new Dictionary<string, int>();
                         error = true;
                         MessageBox.Show("ERROR DE FORMATO, LINEA No." + cont + "\n\t" + cadena);
+                        Application.Restart();
                     }
                 }
                 else //ERROR EN EL FORMATO
                 {
-                    alfabeto = new Dictionary<string, List<int>>();
-                    tokens = new Dictionary<string, List<string>>();
-                    auxActions = new List<string>();
-                    actions = new Dictionary<int, string>();
-                    errores = new Dictionary<string, int>();
                     error = true;
                     MessageBox.Show("ERROR DE FORMATO, NO TIENE EL SINGO \'=\', LINEA No." + cont + "\n\t" + cadena);
+                    Application.Restart();
                 }
             }
         }
