@@ -267,12 +267,12 @@ namespace AnalizadorLexico
                             { // si está mal el formato de char
                                 alfabeto = new Dictionary<string, List<int>>();
                                 error = true;
-                                MessageBox.Show("FUNCION CHR MAL ESCRINTA, LINEA No." + cont + "\n\t" + cadena);
+                                MessageBox.Show("FUNCION CHR MAL ESCRITA, LINEA No." + cont + "\n\t" + cadena);
                             }
                             else // agregar el rango al alfabeto
                             {
-                                limiteInferior = validarLimite(limites[0]);
-                                limiteSuperior = validarLimite(limites[1]);
+                                limiteInferior = validarLimite(limites[0].Trim());
+                                limiteSuperior = validarLimite(limites[1].Trim());
 
                                 if ((limiteInferior < limiteSuperior) && limiteInferior != 0 && limiteSuperior != 0)
                                 {
@@ -471,7 +471,7 @@ namespace AnalizadorLexico
                     alfabeto = new Dictionary<string, List<int>>();
                     tokens = new Dictionary<string, List<string>>();
                     error = true;
-                    MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\', LINEA No." + cont + "\n\t" + cadena);
+                    MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\', LINEA No." + cont + "\n\t" + cadena);                    
                 }
 
             }
@@ -483,6 +483,7 @@ namespace AnalizadorLexico
         /// <param name="cadena">Token completo</param>
         public List<string> obtenerToken(string cadena) {            
 
+            //limpieza de la cadena, remover tabulaciones y reducirlas a un espacio
             cadena = cadena.Replace("\t", " ");
             while (cadena.IndexOf("  ") >= 0)
             {
@@ -490,6 +491,7 @@ namespace AnalizadorLexico
             }
 
             cadena = cadena.Trim();            
+
             List<string> response = new List<string>();
             string aux = "";
             
@@ -505,6 +507,7 @@ namespace AnalizadorLexico
                     if (!alfabeto.Keys.ToList().Contains(aux) && aux != "" && aux != ")" && aux != "(" && aux != "|" && aux != "?")
                     {
                         aux = "";
+                        response = new List<string>();                       
                         j = cadena.Length;
                     }
                     else
@@ -521,6 +524,7 @@ namespace AnalizadorLexico
                     if (cadena[j + 2] != '\'') //si no está cerrada la comilla simple sale del ciclo y devuelve token invalido
                     {
                         aux = "";
+                        response = new List<string>();
                         j = cadena.Length;
                     }
                     else
@@ -532,12 +536,32 @@ namespace AnalizadorLexico
                 }
                 else if (cadena[j] == '(' || cadena[j] == ')' || cadena[j] == '*' || cadena[j] == '+' || cadena[j] == '|' || cadena[j] == '?')
                 {
-                    if (aux != "")
+                    if (cadena[j] == '(')
                     {
-                        response.Add(aux);
-                        aux = "";
+                        if (cadena.IndexOf(")") == -1)
+                        {
+                            response = new List<string>();
+                            j = cadena.Length;
+                        }
+                        else
+                        {
+                            if (aux != "")
+                            {
+                                response.Add(aux);
+                                aux = "";
+                            }
+                            response.Add(cadena[j].ToString());
+                        }
                     }
-                    response.Add(cadena[j].ToString());
+                    else
+                    {
+                        if (aux != "")
+                        {
+                            response.Add(aux);
+                            aux = "";
+                        }
+                        response.Add(cadena[j].ToString());
+                    }
                 }
                 else
                 {
@@ -545,11 +569,28 @@ namespace AnalizadorLexico
                 }
             }
 
-
+            //aux debe ser igual a "", sino hay datos extra que no deben ser leídos
             if (aux != "")
             {
-                response.Add(aux);
-            }            
+                response = new List<string>();
+            }
+
+
+            //verificar en la lista, si hay errores en los signos
+            for (int i = 0; i < response.Count; i++)
+            {
+                if (response[i].Equals("+") || response[i].Equals("*") || response[i].Equals("?"))
+                {
+                    if (i != response.Count - 1) // no verifica el ultimo porque el siguente es null
+                    {
+                        if (response[i + 1].Equals("+") || response[i + 1].Equals("*") || response[i + 1].Equals("?"))
+                        {
+                            response = new List<string>();
+                        }
+                    }
+                }
+            }
+
 
 
             return response;
