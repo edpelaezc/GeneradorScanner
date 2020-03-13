@@ -11,6 +11,7 @@ namespace AnalizadorLexico
         public List<int> conjunto = new List<int>();
         public int numero { get; set; }
 
+        //true ->estado de aceptación 
         public bool aceptacion { get; set; }
 
         public Estado() { }

@@ -12,7 +12,7 @@ namespace AnalizadorLexico
         List<Nodo> terminales = new List<Nodo>();
         public List<string> simbolosTerminales = new List<string>();
         public List<Estado> estados = new List<Estado>();
-        public List<Transicion> transiciones = new List<Transicion>();
+        public List<Transicion> transiciones = new List<Transicion>();        
 
         public List<string> transformarPostfijo(List<string> infijo)
         {
@@ -456,7 +456,19 @@ namespace AnalizadorLexico
 
         }
 
-
+        public void determinarEstadosDeAceptacion() {
+            for (int i = 0; i < estados.Count; i++)
+            {
+                if (estados[i].conjunto.Contains(contador)) //contador queda con el numero de la ultima hoja #
+                {
+                    estados[i].aceptacion = true;
+                }
+                else
+                {
+                    estados[i].aceptacion = false;
+                }
+            }
+        }
 
     }
 }

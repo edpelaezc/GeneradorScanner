@@ -17,7 +17,8 @@ namespace AnalizadorLexico
         OpenFileDialog openFile;
         StreamReader fileReader;
         bool error = false;
-        string path = "";  
+        string path = "";
+        int cont = 0;
         //estructuras para guardar los datos del archivo 
         Dictionary<string, List<int>> alfabeto = new Dictionary<string, List<int>>();
         Dictionary<string, List<string>> tokens = new Dictionary<string, List<string>>();
@@ -80,6 +81,7 @@ namespace AnalizadorLexico
                 if (line.ToUpper().Contains("SETS")  | line.ToUpper().Contains("TOKENS") | line.ToUpper().Contains("ACTIONS")) {
                     current = line.ToUpper();
                     line = fileReader.ReadLine();
+                    cont++;
 
                     if (line != null && current != "TOKENS") {
                         line = quitarEspacios(line);
@@ -97,6 +99,7 @@ namespace AnalizadorLexico
                         else
                         {
                             line = fileReader.ReadLine();
+                            cont++;
                             line = quitarEspacios(line);
                             if (line.Trim() != "{")
                             {
@@ -108,12 +111,14 @@ namespace AnalizadorLexico
                             else
                             {                                
                                 line = fileReader.ReadLine();
+                                cont++;
                                 line = quitarEspacios(line);
                                 //validar que contenga llave cerrada
                                 while (line.Trim() != "}" && !line.ToUpper().Contains("ERROR"))
                                 {
                                     auxActions.Add(line);
                                     line = fileReader.ReadLine();
+                                    cont++;
                                     line = quitarEspacios(line);
                                 }
 
@@ -149,7 +154,8 @@ namespace AnalizadorLexico
                 }
                 
                 line = fileReader.ReadLine();
-                
+                cont++;
+
                 if (line != null && current != "TOKENS") { 
                     line = quitarEspacios(line); 
                 }
@@ -157,8 +163,16 @@ namespace AnalizadorLexico
 
             if (line == null)
             {
-                generarDFA.Enabled = true;
-                MessageBox.Show("ARCHIVO LEÍDO CON ÉXITO");
+                if (errores.Count == 0)
+                {
+                    error = true;
+                    MessageBox.Show("EL ARCHIVO NO CONTIENE LA SECCIÓN DE ERRORES");
+                }
+                else
+                {
+                    generarDFA.Enabled = true;
+                    MessageBox.Show("ARCHIVO LEÍDO CON ÉXITO");
+                }
             }
 
             if (error == true)
@@ -166,6 +180,47 @@ namespace AnalizadorLexico
                 textBox1.Text = "";
                 path = "";
             }
+
+            if (!error)
+            {
+                //mostrar resultados
+                //mostrar SETS                          
+                for (int i = 0; i < alfabeto.Count; i++)
+                {
+                    KeyValuePair<string, List<int>> valor = alfabeto.ElementAt(i);
+                    listBox1.Items.Add(valor.Key);
+                    listBox1.Items.Add("\t" + mostrar(valor.Value));
+                }
+
+                //mostrar tokens
+                listBox2.Items.Add("TOKENS");               
+                for (int i = 0; i < tokens.Count; i++)
+                {
+                    KeyValuePair<string, List<string>> valor = tokens.ElementAt(i);
+                    listBox2.Items.Add("\t" + valor.Key + "   = "  + string.Join("", valor.Value.ToArray()));
+                }
+
+                //mostrar actions
+                listBox2.Items.Add("ACTIONS");
+                for (int i = 0; i < actions.Count; i++)
+                {
+                    KeyValuePair<int, string> valor = actions.ElementAt(i);
+                    listBox2.Items.Add("\t" + valor.Key + "   = " +  "'" + valor.Value + "'");
+                }
+
+                //mostrar errores
+                listBox2.Items.Add("ERROR");
+                for (int i = 0; i < errores.Count; i++)
+                {
+                    KeyValuePair<string, int> valor = errores.ElementAt(i);
+                    listBox2.Items.Add("\t" + valor.Key + "   = " + valor.Value);
+                }
+
+
+            }
+
+
+
         }
 
         public void leerSets(string cadena) {
@@ -174,11 +229,13 @@ namespace AnalizadorLexico
             int limiteSuperior = 0;
 
             List<int> setAux = new List<int>();
-            if (cadena != "") {
+            if (cadena.Trim() != "") {
                 if (validarIgual(cadena))
                 {
                     string nombre = cadena.Substring(0, cadena.IndexOf('='));
-                    string[] conjuntos = cadena.Substring(cadena.IndexOf('=') + 1).Split('+');
+                    string nombreAux = cadena.Substring(cadena.IndexOf('=') + 1);
+                    nombreAux = nombreAux.Trim();
+                    string[] conjuntos = nombreAux.Split('+');
 
                     for (int i = 0; i < conjuntos.Length; i++)
                     {
@@ -203,14 +260,14 @@ namespace AnalizadorLexico
                                 {
                                     alfabeto = new Dictionary<string, List<int>>();
                                     error = true;
-                                    MessageBox.Show("ERROR DE FORMATO EN EL RANGO\n\t" + cadena);
+                                    MessageBox.Show("ERROR DE FORMATO EN LA FUNCION CHR, LINEA No." + cont + "\n\t" + cadena);
                                 }
                             }
                             else if (limites[0].Contains("CH") || limites[0].Contains("CR"))
                             { // si está mal el formato de char
                                 alfabeto = new Dictionary<string, List<int>>();
                                 error = true;
-                                MessageBox.Show("ERROR DE FORMATO DE RANGO\n\t" + cadena);
+                                MessageBox.Show("FUNCION CHR MAL ESCRINTA, LINEA No." + cont + "\n\t" + cadena);
                             }
                             else // agregar el rango al alfabeto
                             {
@@ -228,7 +285,7 @@ namespace AnalizadorLexico
                                 {
                                     alfabeto = new Dictionary<string, List<int>>();
                                     error = true;
-                                    MessageBox.Show("ERROR DE FORMATO EN EL RANGO\n\t" + cadena);
+                                    MessageBox.Show("ERROR DE FORMATO EN EL RANGO, LINEA No." + cont + "\n\t" + cadena);
                                 }
                             }
 
@@ -237,7 +294,7 @@ namespace AnalizadorLexico
                         { // esta mal el formato de rango 
                             alfabeto = new Dictionary<string, List<int>>();
                             error = true;
-                            MessageBox.Show("ERROR DE FORMATO DE RANGO\n\t" + cadena);
+                            MessageBox.Show("ERROR DE FORMATO EN EL RANGO, LINEA No." + cont + "\n\t" + cadena);
                         }
                         else
                         { // es un elemento individual 
@@ -250,7 +307,7 @@ namespace AnalizadorLexico
                             {
                                 alfabeto = new Dictionary<string, List<int>>();
                                 error = true;
-                                MessageBox.Show("ERROR DE FORMATO\n\t" + cadena);
+                                MessageBox.Show("ERROR DE FORMATO EN LA DEFINICION DEL CARACTER, LINEA No." + cont + "\n\t" + cadena);
                             }
                         }
                     }
@@ -264,7 +321,7 @@ namespace AnalizadorLexico
                 {
                     alfabeto = new Dictionary<string, List<int>>();
                     error = true;
-                    MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\'\n\t" + cadena);
+                    MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\', LINEA No." + cont + "\n\t" + cadena);
                 }                            
             }            
         }
@@ -327,7 +384,7 @@ namespace AnalizadorLexico
         /// </summary>
         /// <param name="cadena">Linea del archivo de pruebas</param>
         public void leerTokens(string cadena) {
-            if (cadena != "")
+            if (cadena.Trim() != "")
             {
                 if (validarIgual(cadena))
                 {
@@ -357,7 +414,7 @@ namespace AnalizadorLexico
                                         alfabeto = new Dictionary<string, List<int>>();
                                         tokens = new Dictionary<string, List<string>>();
                                         error = true;
-                                        MessageBox.Show("ERROR DE FORMATO, LAS CLAVES ESTÁN CONCATENADAS\n\t" + cadena);                                        
+                                        MessageBox.Show("ERROR DE FORMATO, LAS CLAVES ESTÁN CONCATENADAS, LINEA No." + cont + "\n\t" + cadena);                                        
                                         tokenRechazado = true;
                                     }
                                 }
@@ -365,14 +422,14 @@ namespace AnalizadorLexico
 
                             
                             if (!tokenRechazado)//el token paso validaciones generales
-                            {
+                            {                                                        
                                 //leer token y procesarlo 
                                 List<string> succesToken = obtenerToken(tokenAux);
 
                                 if (succesToken.Count == 0) {
                                     alfabeto = new Dictionary<string, List<int>>();
                                     tokens = new Dictionary<string, List<string>>();
-                                    MessageBox.Show("ERROR EN EL FORMATO DEL TOKEN\n\t" + cadena);
+                                    MessageBox.Show("ERROR EN EL FORMATO DEL TOKEN,LINEA No." + cont + "\n\t" + cadena);
                                     error = true;
                                 }
                                 else
@@ -387,9 +444,9 @@ namespace AnalizadorLexico
                                         alfabeto = new Dictionary<string, List<int>>();
                                         tokens = new Dictionary<string, List<string>>();
                                         error = true;
-                                        MessageBox.Show("EL TOKEN YA EXISTE\n\t" + cadena);                                        
+                                        MessageBox.Show("EL TOKEN YA EXISTE, LINEA No." + cont + "\n\t" + cadena);                                        
                                     }
-                                    Console.WriteLine("NOMBRE VALIDO");
+                                    //Console.WriteLine("NOMBRE VALIDO");
                                 }
                             }
                         }//error de formato en el token
@@ -397,7 +454,7 @@ namespace AnalizadorLexico
                             alfabeto = new Dictionary<string, List<int>>();
                             tokens = new Dictionary<string, List<string>>();
                             error = true;
-                            MessageBox.Show("ERROR DE FORMATO, NOMBRE DE TOKEN INVÁLIDO\n\t" + cadena);
+                            MessageBox.Show("ERROR DE FORMATO, NOMBRE DE TOKEN INVÁLIDO, LINEA No." + cont + "\n\t" + cadena);
                         }
                     }
                     else
@@ -405,7 +462,7 @@ namespace AnalizadorLexico
                         alfabeto = new Dictionary<string, List<int>>();
                         tokens = new Dictionary<string, List<string>>();
                         error = true;
-                        MessageBox.Show("ERROR DE FORMATO, NO CONTIENE LA PALARA \'TOKEN\'\n\t" + cadena);
+                        MessageBox.Show("ERROR DE FORMATO, NO CONTIENE LA PALARA \'TOKEN\', LINEA No." + cont + "\n\t" + cadena);
                     }
 
                 }//SI LA CADENA NO TIENE FORMATO ADECUADO 
@@ -414,7 +471,7 @@ namespace AnalizadorLexico
                     alfabeto = new Dictionary<string, List<int>>();
                     tokens = new Dictionary<string, List<string>>();
                     error = true;
-                    MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\'\n\t" + cadena);
+                    MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\', LINEA No." + cont + "\n\t" + cadena);
                 }
 
             }
@@ -424,8 +481,15 @@ namespace AnalizadorLexico
         /// Recibe la cadena del token entera desde el simbolo '=' hasta el final de la cadena. 
         /// </summary>
         /// <param name="cadena">Token completo</param>
-        public List<string> obtenerToken(string cadena) {
-            cadena = cadena.Trim();
+        public List<string> obtenerToken(string cadena) {            
+
+            cadena = cadena.Replace("\t", " ");
+            while (cadena.IndexOf("  ") >= 0)
+            {
+                cadena = cadena.Replace("  ", " ");
+            }
+
+            cadena = cadena.Trim();            
             List<string> response = new List<string>();
             string aux = "";
             
@@ -529,7 +593,7 @@ namespace AnalizadorLexico
                                     auxActions = new List<string>();
                                     actions = new Dictionary<int, string>();
                                     error = true;
-                                    MessageBox.Show("LA PALABRA RESERVADA YA EXISTE\n\t" + aux);
+                                    MessageBox.Show("LA PALABRA RESERVADA YA EXISTE, LINEA No." + cont + "\n\t" + aux);
                                 }
                             }
                             else
@@ -540,7 +604,7 @@ namespace AnalizadorLexico
                                 auxActions = new List<string>();
                                 i = reservadas.Count;
                                 error = true;
-                                MessageBox.Show("ERROR DE FORMATO, FALTA \'\n\t" + aux);
+                                MessageBox.Show("ERROR DE FORMATO, FALTA \', LINEA No." + cont + "\n\t" + aux);
                             }
                         }
                         else
@@ -551,7 +615,7 @@ namespace AnalizadorLexico
                             auxActions = new List<string>();
                             i = reservadas.Count;
                             error = true;
-                            MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\'\n\t" + aux);
+                            MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\', LINEA No." + cont + "\n\t" + aux);
                         }
                     }
                     else //ERROR EN EL FORMATO
@@ -562,7 +626,7 @@ namespace AnalizadorLexico
                         auxActions = new List<string>();
                         i = reservadas.Count;
                         error = true;
-                        MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\'\n\t" + aux);
+                        MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\', LINEA No." + cont + "\n\t" + aux);
                     }
                 }                
             }
@@ -570,20 +634,33 @@ namespace AnalizadorLexico
 
 
         public void leerError(string cadena) {
-            if (validarIgual(cadena))
+            if (cadena.Trim() != "")
             {
-                cadena = cadena.Trim();
-                int numero = 0;
-                string nombre = cadena.Substring(0, cadena.IndexOf('='));
-                bool succes = int.TryParse(cadena.Substring(cadena.IndexOf('=') + 1), out numero);
-
-                if (succes)
+                if (validarIgual(cadena))
                 {
-                    try
+                    cadena = cadena.Trim();
+                    int numero = 0;
+                    string nombre = cadena.Substring(0, cadena.IndexOf('='));
+                    bool succes = int.TryParse(cadena.Substring(cadena.IndexOf('=') + 1), out numero);
+
+                    if (succes)
                     {
-                        errores.Add(nombre, numero);
+                        try
+                        {
+                            errores.Add(nombre, numero);
+                        }
+                        catch (ArgumentException)
+                        {
+                            alfabeto = new Dictionary<string, List<int>>();
+                            tokens = new Dictionary<string, List<string>>();
+                            auxActions = new List<string>();
+                            actions = new Dictionary<int, string>();
+                            errores = new Dictionary<string, int>();
+                            error = true;
+                            MessageBox.Show("EL ERROR YA EXISTE RESERVADA YA EXISTE, LINEA No." + cont + "\n\t" + cadena);
+                        }
                     }
-                    catch (ArgumentException)
+                    else
                     {
                         alfabeto = new Dictionary<string, List<int>>();
                         tokens = new Dictionary<string, List<string>>();
@@ -591,10 +668,10 @@ namespace AnalizadorLexico
                         actions = new Dictionary<int, string>();
                         errores = new Dictionary<string, int>();
                         error = true;
-                        MessageBox.Show("EL ERROR YA EXISTE RESERVADA YA EXISTE\n\t" + cadena);
+                        MessageBox.Show("ERROR DE FORMATO, LINEA No." + cont + "\n\t" + cadena);
                     }
                 }
-                else
+                else //ERROR EN EL FORMATO
                 {
                     alfabeto = new Dictionary<string, List<int>>();
                     tokens = new Dictionary<string, List<string>>();
@@ -602,18 +679,8 @@ namespace AnalizadorLexico
                     actions = new Dictionary<int, string>();
                     errores = new Dictionary<string, int>();
                     error = true;
-                    MessageBox.Show("ERROR DE FORMATO\n\t" + cadena);
+                    MessageBox.Show("ERROR DE FORMATO, NO TIENE EL SINGO \'=\', LINEA No." + cont + "\n\t" + cadena);
                 }
-            }
-            else //ERROR EN EL FORMATO
-            {
-                alfabeto = new Dictionary<string, List<int>>();
-                tokens = new Dictionary<string, List<string>>();
-                auxActions = new List<string>();
-                actions = new Dictionary<int, string>();
-                errores = new Dictionary<string, int>();
-                error = true;
-                MessageBox.Show("ERROR DE FORMATO, NO TIENE EL SINGO \'=\'\n\t" + cadena);
             }
         }
 
@@ -748,6 +815,8 @@ namespace AnalizadorLexico
             funcionesDFA.verificarNuevosEstados();
             //si hay más conjuntos determina sus transiociones
             funcionesDFA.determinarTransiciones();
+            //determinar estados de aceptacion             
+            funcionesDFA.determinarEstadosDeAceptacion();
 
             List<Estado> estados = funcionesDFA.estados;
             List<Transicion> transiciones = funcionesDFA.transiciones;
@@ -756,6 +825,7 @@ namespace AnalizadorLexico
             int filas = estados.Count;
             int columnas = encabezado.Count;
             string[,] tablaTransiciones = new string[filas, columnas];
+
 
             for (int i = 0; i < filas; i++)//fijar las filas de la matriz 
             {
@@ -768,7 +838,7 @@ namespace AnalizadorLexico
                             if (transiciones[j].simbolo == encabezado[k])
                             {
                                 string conjunto = string.Join(",", transiciones[j].destino.conjunto.ToArray());
-                                tablaTransiciones[i, k] = transiciones[j].destino.numero.ToString() + "{" + conjunto + "}";
+                                tablaTransiciones[i, k] = transiciones[j].destino.numero.ToString() + "={" + conjunto + "}";
                                 k = encabezado.Count;
                             }                            
                         }
@@ -776,6 +846,9 @@ namespace AnalizadorLexico
                 }
             }
 
+            //mostrar estado inicial 
+            textBox3.Text = string.Join(",", raiz.first);
+            textBox4.Text = string.Join(",", raiz.last);
 
             //agregar encabezado
             for (int i = 0; i < columnas + 1; i++)
@@ -795,7 +868,16 @@ namespace AnalizadorLexico
             for (int i = 0; i < filas; i++)
             {
                 string conjunto = string.Join(",", estados[i].conjunto.ToArray());
-                dataGridView1.Rows[i].Cells[0].Value = estados[i].numero + "{" + conjunto + "}";
+                if (estados[i].aceptacion)
+                {
+                    dataGridView1.Rows[i].Cells[0].Value = "#" + estados[i].numero + "={" + conjunto + "}";
+                    dataGridView1.Rows[i].Cells[0].Style.BackColor = Color.LawnGreen;
+                }
+                else
+                {
+                    dataGridView1.Rows[i].Cells[0].Value = estados[i].numero + "={" + conjunto + "}";
+                }
+                
             }
 
             //mostrar transiciones
@@ -810,8 +892,26 @@ namespace AnalizadorLexico
 
         }
 
-        
 
+        public string mostrar(List<int> lista) {
+            string response = "";
+            for (int i = 0; i < lista.Count; i++)
+            {
+                if (i == lista.Count - 1)
+                {
+                    response += ((char)lista[i]).ToString();
+                }
+                else
+                {
+                    response += ((char)lista[i]).ToString() + ",";
+                }                
+            }
+            return response;
+        }
 
+        private void GUI_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }
