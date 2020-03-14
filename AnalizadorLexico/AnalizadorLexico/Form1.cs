@@ -84,6 +84,7 @@ namespace AnalizadorLexico
                 Application.Restart();
             }
 
+            //AL ENCONTRAR EL PRIMER ERROR DETIENE LA LECTURA
             while (line != null && error == false) //CICLO PRINCIPAL DE LECTURA
             {
                 //comparaciones de encabezados
@@ -976,6 +977,11 @@ namespace AnalizadorLexico
         private void GUI_Load(object sender, EventArgs e)
         {
 
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Application.Restart();
         }
     }
 }
