@@ -18,6 +18,7 @@ namespace AnalizadorLexico
         StreamReader fileReader;
         bool error = false;
         string path = "";
+        string explicacion = "";
         int cont = 0;
         //estructuras para guardar los datos del archivo 
         Dictionary<string, List<int>> alfabeto = new Dictionary<string, List<int>>();
@@ -62,10 +63,8 @@ namespace AnalizadorLexico
             else
             {
                 error = true;
-                path = "";
-                openFile = new OpenFileDialog();
-                fileReader = null;
                 MessageBox.Show("TIENE QUE INGRESAR UN ARCHIVO");
+                Application.Restart();
             }
 
             //validar si contiene la sección de TOKENS
