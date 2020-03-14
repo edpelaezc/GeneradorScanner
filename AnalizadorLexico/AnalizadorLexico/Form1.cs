@@ -231,7 +231,7 @@ namespace AnalizadorLexico
                                 }
                                 else
                                 {                                    
-                                    error = true;
+                                    error = true;                                    
                                     MessageBox.Show("ERROR DE FORMATO EN LA FUNCION CHR, LINEA No." + cont + "\n\t" + cadena);
                                     Application.Restart();
                                 }
@@ -257,7 +257,7 @@ namespace AnalizadorLexico
                                 else
                                 {                                    
                                     error = true;
-                                    MessageBox.Show("ERROR DE FORMATO EN EL RANGO, LINEA No." + cont + "\n\t" + cadena);
+                                    MessageBox.Show("RANGO INCORRECTO, LINEA No." + cont + "\n\t" + cadena);
                                     Application.Restart();
                                 }
                             }
@@ -400,7 +400,7 @@ namespace AnalizadorLexico
 
                                 if (succesToken.Count == 0) {
                                     error = true;
-                                    MessageBox.Show("ERROR EN EL FORMATO DEL TOKEN,LINEA No." + cont + "\n\t" + cadena);                                    
+                                    MessageBox.Show("ERROR EN EL FORMATO DEL TOKEN,LINEA No." + cont + ", " + explicacion + "\n\t" + cadena);                                    
                                     Application.Restart();
                                 }
                                 else
@@ -476,10 +476,11 @@ namespace AnalizadorLexico
                         aux = "";
                         response = new List<string>();                       
                         j = cadena.Length;
+                        explicacion = "SET NO DEFINIDO";
                     }
                     else
                     {
-                        if (cadena[j + 1] != '?' && cadena[j + 1] != '+' && cadena[j + 1] != '*' && cadena[j + 1] != ')' && cadena[j + 1] != '|' && cadena[j - 1] != '(' && cadena[j - 1] != '|')
+                        if (cadena[j + 1] != '?' && cadena[j + 1] != '+' && cadena[j + 1] != '*' && cadena[j + 1] != ')' && cadena[j + 1] != '|' && cadena[j + 1] != '{' && cadena[j + 1] != '}' && cadena[j - 1] != '(' && cadena[j - 1] != '|')
                         {
                             response.Add(".");
                         }
@@ -488,17 +489,28 @@ namespace AnalizadorLexico
                 }
                 else if (cadena[j] == '\'')
                 {
-                    if (cadena[j + 2] != '\'') //si no está cerrada la comilla simple sale del ciclo y devuelve token invalido
+                    if (cadena.Length >= 3)
                     {
-                        aux = "";
-                        response = new List<string>();
-                        j = cadena.Length;
+                        if (cadena[j + 2] != '\'') //si no está cerrada la comilla simple sale del ciclo y devuelve token invalido
+                        {
+                            aux = "";
+                            response = new List<string>();
+                            j = cadena.Length;
+                            explicacion = "FALTA UNA COMILLA";
+                        }
+                        else
+                        {
+                            response.Add(cadena[j + 1].ToString());
+                            aux = "";
+                            j += 2;
+                        }
                     }
                     else
                     {
-                        response.Add(cadena[j + 1].ToString());
+                        response = new List<string>();
+                        j = cadena.Length;
                         aux = "";
-                        j += 2;
+                        explicacion = "FALTA UNA COMILLA";
                     }
                 }
                 else if (cadena[j] == '(' || cadena[j] == ')' || cadena[j] == '*' || cadena[j] == '+' || cadena[j] == '|' || cadena[j] == '?')
@@ -509,12 +521,14 @@ namespace AnalizadorLexico
                         {
                             response = new List<string>();
                             j = cadena.Length;
+                            explicacion = "FALTA PARENTESIS DE CIERRE";
                         }
                         else
                         {
                             if (aux != "")
                             {
                                 response.Add(aux);
+                                response.Add(".");
                                 aux = "";
                             }
                             response.Add(cadena[j].ToString());
@@ -530,6 +544,23 @@ namespace AnalizadorLexico
                         response.Add(cadena[j].ToString());
                     }
                 }
+                else if (cadena[j] == '{')
+                {
+                    if (cadena.IndexOf("}") == -1)
+                    {
+                        response = new List<string>();
+                        j = cadena.Length;
+                        explicacion = "FALTA LLAVE DE CIERRE";
+                    }
+                    else
+                    {
+                        response.Add(".");
+                        cadena = cadena.Replace("}", "");
+                        response.Add(cadena.Substring(cadena.IndexOf('{') + 1));
+                        j = cadena.Length;
+                    }
+
+                }
                 else
                 {
                     aux += cadena[j];
@@ -540,6 +571,7 @@ namespace AnalizadorLexico
             if (aux != "")
             {
                 response = new List<string>();
+                explicacion = "CARACTERES INVÁLIDOS EN EL TOKEN";
             }
 
 
@@ -553,6 +585,7 @@ namespace AnalizadorLexico
                         if (response[i + 1].Equals("+") || response[i + 1].Equals("*") || response[i + 1].Equals("?"))
                         {
                             response = new List<string>();
+                            explicacion = "OPERADORES EN ORDEN INCORRECTO";
                         }
                     }
                 }
@@ -573,8 +606,13 @@ namespace AnalizadorLexico
                     //buscar llave de apertura y de cierre
                     List<KeyValuePair<int, string>> tokensActions = new List<KeyValuePair<int, string>>();                    
                     string line = "";
-                    line = fileReader.ReadLine();
+                    line = fileReader.ReadLine();                    
                     cont++;
+                    while (line == "")
+                    {
+                        line = fileReader.ReadLine();
+                        cont++;
+                    }
                     if (line.Trim() == "{") //si contiene la llave de apertura
                     {
                         line = fileReader.ReadLine();
