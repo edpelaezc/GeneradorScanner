@@ -901,6 +901,13 @@ namespace AnalizadorLexico
                 }
             }
 
+            //mostrar follow
+            for (int i = 0; i < follow.Count; i++)
+            {
+                KeyValuePair<int, List<int>> valor = follow.ElementAt(i);
+                listBox3.Items.Add(valor.Key + "\t" + string.Join(",", valor.Value.ToArray()));
+            }
+
             //mostrar estado inicial 
             textBox3.Text = string.Join(",", raiz.first);
             textBox4.Text = string.Join(",", raiz.last);

@@ -46,6 +46,8 @@
             this.label7 = new System.Windows.Forms.Label();
             this.label8 = new System.Windows.Forms.Label();
             this.textBox4 = new System.Windows.Forms.TextBox();
+            this.listBox3 = new System.Windows.Forms.ListBox();
+            this.label9 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -90,7 +92,7 @@
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Location = new System.Drawing.Point(31, 429);
             this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.Size = new System.Drawing.Size(658, 245);
+            this.dataGridView1.Size = new System.Drawing.Size(923, 245);
             this.dataGridView1.TabIndex = 4;
             // 
             // label2
@@ -105,7 +107,7 @@
             // generarDFA
             // 
             this.generarDFA.Enabled = false;
-            this.generarDFA.Location = new System.Drawing.Point(547, 242);
+            this.generarDFA.Location = new System.Drawing.Point(812, 278);
             this.generarDFA.Name = "generarDFA";
             this.generarDFA.Size = new System.Drawing.Size(142, 43);
             this.generarDFA.TabIndex = 6;
@@ -151,7 +153,7 @@
             // 
             this.listBox2.FormattingEnabled = true;
             this.listBox2.HorizontalScrollbar = true;
-            this.listBox2.Location = new System.Drawing.Point(400, 110);
+            this.listBox2.Location = new System.Drawing.Point(348, 110);
             this.listBox2.Name = "listBox2";
             this.listBox2.Size = new System.Drawing.Size(289, 108);
             this.listBox2.TabIndex = 12;
@@ -159,7 +161,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(397, 94);
+            this.label5.Location = new System.Drawing.Point(345, 94);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(149, 13);
             this.label5.TabIndex = 13;
@@ -206,11 +208,30 @@
             this.textBox4.Size = new System.Drawing.Size(100, 20);
             this.textBox4.TabIndex = 18;
             // 
+            // listBox3
+            // 
+            this.listBox3.FormattingEnabled = true;
+            this.listBox3.Location = new System.Drawing.Point(665, 110);
+            this.listBox3.Name = "listBox3";
+            this.listBox3.Size = new System.Drawing.Size(289, 108);
+            this.listBox3.TabIndex = 19;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(662, 94);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(59, 13);
+            this.label9.TabIndex = 20;
+            this.label9.Text = "FOLLOWS";
+            // 
             // GUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(721, 686);
+            this.ClientSize = new System.Drawing.Size(988, 686);
+            this.Controls.Add(this.label9);
+            this.Controls.Add(this.listBox3);
             this.Controls.Add(this.textBox4);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.label7);
@@ -257,6 +278,8 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.TextBox textBox4;
+        private System.Windows.Forms.ListBox listBox3;
+        private System.Windows.Forms.Label label9;
     }
 }
 
