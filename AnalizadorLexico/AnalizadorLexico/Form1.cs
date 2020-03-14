@@ -23,7 +23,7 @@ namespace AnalizadorLexico
         //estructuras para guardar los datos del archivo 
         Dictionary<string, List<int>> alfabeto = new Dictionary<string, List<int>>();
         Dictionary<string, List<string>> tokens = new Dictionary<string, List<string>>();
-        Dictionary<int, string> actions = new Dictionary<int, string>();
+        Dictionary<string, List<KeyValuePair<int, string>>> actions = new Dictionary<string, List<KeyValuePair<int, string>>>();
         Dictionary<string, int> errores = new Dictionary<string, int>();
         Dictionary<int, List<int>> follow = new Dictionary<int, List<int>>();
         List<string> auxActions = new List<string>();
@@ -53,11 +53,13 @@ namespace AnalizadorLexico
             string line = "";
             string archivo = "";
             bool contieneTokens = false;
+            bool contieneReservadas = false;
             if (path != "")
             {
                 fileReader = new StreamReader(path);
                 archivo = fileReader.ReadToEnd();
                 contieneTokens = archivo.IndexOf("tokens", StringComparison.OrdinalIgnoreCase) >= 0;
+                contieneReservadas = archivo.IndexOf("reservadas()", StringComparison.OrdinalIgnoreCase) >= 0;
                 fileReader = new StreamReader(path);
             }
             else
@@ -75,64 +77,31 @@ namespace AnalizadorLexico
                 Application.Restart();
             }
 
+            if (!contieneReservadas)
+            {
+                error = true;
+                MessageBox.Show("EL ARCHIVO NO CONTIENE LA FUNCIÓN: RESERVADAS()");
+                Application.Restart();
+            }
+
             while (line != null && error == false) //CICLO PRINCIPAL DE LECTURA
             {
                 //comparaciones de encabezados
-                if (line.ToUpper().Contains("SETS")  | line.ToUpper().Contains("TOKENS") | line.ToUpper().Contains("ACTIONS")) {
-                    current = line.ToUpper();
-                    line = fileReader.ReadLine();
-                    cont++;
+                if (line.ToUpper().Contains("SETS")  | line.ToUpper().Contains("TOKENS") | line.ToUpper().Contains("ACTIONS") | line.Trim().ToUpper().Contains("ERROR")) {
+                    if (line.ToUpper().Contains("ERROR"))
+                    {
+                        current = "ERROR";
+                    }
+                    else
+                    {
+                        current = line.ToUpper();
+                        line = fileReader.ReadLine();
+                        cont++;
+                    }                    
 
                     if (line != null && current != "TOKENS") {
                         line = quitarEspacios(line);
-                    }
-
-                    if (current.Trim() == "ACTIONS")
-                    {
-                        if (line.ToUpper().Trim() != "RESERVADAS()")
-                        {
-                            error = true;
-                            MessageBox.Show("ERROR DE FORMATO\n\t" + line);
-                            Application.Restart();
-                        }
-                        else
-                        {
-                            line = fileReader.ReadLine();
-                            cont++;
-                            line = quitarEspacios(line);
-                            if (line.Trim() != "{")
-                            {
-                                error = true;
-                                MessageBox.Show("ERROR DE FORMATO, NO CONTIENE \'{\' DESPUES DE \"RESERVADAS()\"\n" + archivo);
-                                Application.Restart();
-                            }
-                            else
-                            {                                
-                                line = fileReader.ReadLine();
-                                cont++;
-                                line = quitarEspacios(line);
-                                //validar que contenga llave cerrada
-                                while (line.Trim() != "}" && !line.ToUpper().Contains("ERROR"))
-                                {
-                                    auxActions.Add(line);
-                                    line = fileReader.ReadLine();
-                                    cont++;
-                                    line = quitarEspacios(line);
-                                }
-
-                                if (line.Trim() != "}")
-                                {
-                                    error = true;
-                                    MessageBox.Show("ERROR DE FORMATO, NO CONTIENE \'}\'  DESPUES DE \"RESERVADAS()\"\n" + archivo);
-                                    Application.Restart();
-                                }
-                                else
-                                {
-                                    leerActions(auxActions);
-                                }
-                            }
-                        }
-                    }
+                    }                    
                 }
 
                 if (current.Trim() == "SETS") // metodo para leer los. SETS
@@ -143,7 +112,11 @@ namespace AnalizadorLexico
                 {
                     leerTokens(line);
                 }
-                else if (line.Trim().ToUpper().Contains("ERROR"))
+                else if (current.Trim() == "ACTIONS")
+                {
+                    leerActions(line);
+                }
+                else if (current == "ERROR")
                 {
                     leerError(line);
                 }
@@ -200,8 +173,12 @@ namespace AnalizadorLexico
                 listBox2.Items.Add("ACTIONS");
                 for (int i = 0; i < actions.Count; i++)
                 {
-                    KeyValuePair<int, string> valor = actions.ElementAt(i);
-                    listBox2.Items.Add("\t" + valor.Key + "   = " +  "'" + valor.Value + "'");
+                    KeyValuePair<string, List<KeyValuePair<int, string>>> valor = actions.ElementAt(i);
+                    listBox2.Items.Add("\t" + valor.Key);
+                    for (int j = 0; j < valor.Value.Count; j++)
+                    {
+                        listBox2.Items.Add("\t\t" + valor.Value[j]);
+                    }
                 }
 
                 //mostrar errores
@@ -587,67 +564,100 @@ namespace AnalizadorLexico
         }
 
 
-        public void leerActions(List<string> reservadas) {
-            if (reservadas.Count == 0)
+        public void leerActions(string cadena) {
+            if (cadena.Trim() != "")
             {
-                error = true;
-            }
-            else // las actions no contienen error de estructura
-            {
-                for (int i = 0; i < reservadas.Count; i++)
+                if (cadena.Contains("()"))//en el proceso principal se enviará solamente la definición de la función
                 {
-                    //verificar errores de formato
-                    int resultado;
-                    string aux = reservadas[i];
-                    aux = aux.Trim();
-
-                    if (validarIgual(aux))
+                    string indentificador = cadena.Trim();
+                    //buscar llave de apertura y de cierre
+                    List<KeyValuePair<int, string>> tokensActions = new List<KeyValuePair<int, string>>();                    
+                    string line = "";
+                    line = fileReader.ReadLine();
+                    cont++;
+                    if (line.Trim() == "{") //si contiene la llave de apertura
                     {
-                        string numero = aux.Substring(0, aux.IndexOf('='));
-                        bool succes = int.TryParse(numero, out resultado);
-
-                        if (succes) // si el numero de action es correcto
+                        line = fileReader.ReadLine();
+                        cont++;
+                        //se detiene si encuentra la llave de cierre, o error, o encuentra una nueva función
+                        while (line != "}" && !line.ToUpper().Contains("ERROR") && !line.Contains("()"))
                         {
-                            string palabra = aux.Substring(aux.IndexOf('=') + 1);
-
-                            if (palabra[0] == '\'' && palabra[palabra.Length - 1] == '\'')
+                            int resultado = 0;
+                            string aux = line.Substring(0, line.IndexOf('='));
+                            bool succes = int.TryParse(aux, out resultado);
+                            //si es válido el numero
+                            if (succes)
                             {
-                                try
+                                string palabra = line.Substring(line.IndexOf('=') + 1);
+                                palabra = palabra.Trim();
+                                if (palabra[0] == '\'' && palabra[palabra.Length - 1] == '\'') // es valida, contiene las comillas
                                 {
-                                    palabra = palabra.Replace("\'", "");
-                                    actions.Add(int.Parse(numero), palabra);
+                                    tokensActions.Add(new KeyValuePair<int, string>(resultado, palabra));
+                                    line = fileReader.ReadLine();
+                                    line = line.Trim();
+                                    cont++;
+                                    while (line == "")
+                                    {
+                                        line = fileReader.ReadLine();
+                                        line = line.Trim();
+                                        cont++;
+                                    }
                                 }
-                                catch (ArgumentException)
+                                else
                                 {
                                     error = true;
-                                    MessageBox.Show("LA PALABRA RESERVADA YA EXISTE, LINEA No." + cont + "\n\t" + aux);
+                                    explicacion = "ACTION INVALIDA, FALTA UNA COMILLA";
+                                    MessageBox.Show(explicacion + "LINEA, No." + cont + "\n\t" + line);
                                     Application.Restart();
                                 }
                             }
                             else
                             {
-                                i = reservadas.Count;
                                 error = true;
-                                MessageBox.Show("ERROR DE FORMATO, FALTA \', LINEA No." + cont + "\n\t" + aux);
+                                explicacion = "ACTION INVALIDA, NO CONTIENE NUMERO DE IDENTIFICACIÓN";
+                                MessageBox.Show(explicacion + "LINEA, No." + cont + "\n\t" + line);
                                 Application.Restart();
                             }
                         }
-                        else
+
+                        if (line.ToUpper().Contains("ERROR") || line.Contains("()")) // si tiene cualquiera de estos dos es error
                         {
-                            i = reservadas.Count;
                             error = true;
-                            MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\', LINEA No." + cont + "\n\t" + aux);
+                            explicacion = "NO CONTIENE LLAVE DE CIERRE";
+                            MessageBox.Show(explicacion + ", LINEA No." + cont);
                             Application.Restart();
                         }
+                        else // contiene la llave de cierre
+                        {
+                            try
+                            {
+                                actions.Add(indentificador, tokensActions);
+                            }
+                            catch (Exception)
+                            {
+                                error = true;
+                                explicacion = "YA EXISTE LA FUNCIÓN";
+                                MessageBox.Show(explicacion + ", LINEA No." + cont + "\n\t" + cadena);
+                                Application.Restart();                                
+                            }
+                        }
                     }
-                    else //ERROR EN EL FORMATO
+                    else // no contiene la llave de apertura
                     {
-                        i = reservadas.Count;
                         error = true;
-                        MessageBox.Show("ERROR DE FORMATO, NO CONTIENE EL SIMBOLO \'=\', LINEA No." + cont + "\n\t" + aux);
+                        explicacion = "NO CONTIENE LLAVE DE APERTURA";
+                        MessageBox.Show(explicacion + ", LINEA No." + cont);
                         Application.Restart();
                     }
-                }                
+
+                }
+                else
+                {
+                    error = true;
+                    explicacion = "LA FUNCIÓN NO ESTÁ CORRECTAMENTE DEFINIDA";
+                    MessageBox.Show(explicacion +  ", LINEA No." + cont + "\n\t" + cadena);
+                    Application.Restart();
+                }
             }
         }
 
