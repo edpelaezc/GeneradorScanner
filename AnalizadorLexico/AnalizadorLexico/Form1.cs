@@ -881,6 +881,7 @@ namespace AnalizadorLexico
             int columnas = encabezado.Count;
             string[,] tablaTransiciones = new string[filas, columnas];
 
+            funcionesDFA.cerrarWriter();
 
             for (int i = 0; i < filas; i++)//fijar las filas de la matriz 
             {
@@ -900,6 +901,7 @@ namespace AnalizadorLexico
                     }
                 }
             }
+                        
 
             //mostrar follow
             for (int i = 0; i < follow.Count; i++)

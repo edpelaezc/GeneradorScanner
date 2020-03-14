@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace AnalizadorLexico
@@ -12,7 +13,8 @@ namespace AnalizadorLexico
         List<Nodo> terminales = new List<Nodo>();
         public List<string> simbolosTerminales = new List<string>();
         public List<Estado> estados = new List<Estado>();
-        public List<Transicion> transiciones = new List<Transicion>();        
+        public List<Transicion> transiciones = new List<Transicion>();
+        StreamWriter outputFile = new StreamWriter(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\output.txt");
 
         public List<string> transformarPostfijo(List<string> infijo)
         {
@@ -313,7 +315,8 @@ namespace AnalizadorLexico
             if (root != null)
             {
                 calcularFollow(root.izquierdo);
-                calcularFollow(root.derecho);                
+                calcularFollow(root.derecho);
+                outputFile.WriteLine("NODO: " + root.valor + "\nFIRST: " + string.Join(",", root.first.ToArray()) + "\tLAST: " + string.Join(",", root.last.ToArray()) + "\n");
 
                 if (root.valor == "." && root.derecho != null && root.izquierdo != null)
                 {
@@ -468,6 +471,10 @@ namespace AnalizadorLexico
                     estados[i].aceptacion = false;
                 }
             }
+        }
+
+        public void cerrarWriter() {
+            outputFile.Close();
         }
 
     }
