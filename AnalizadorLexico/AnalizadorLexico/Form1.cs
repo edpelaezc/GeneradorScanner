@@ -792,7 +792,7 @@ namespace AnalizadorLexico
                 if (allTokens[i].Count != 1) // si el token contiene más de un simbolo
                 {
                     // si tiene más de un simbolo pero no tiene operadores 
-                    if (!allTokens[i].Contains("+") && !allTokens[i].Contains("*") && !allTokens[i].Contains("?") && !allTokens[i].Contains("|"))
+                    if (!contieneSet(allTokens[i]))
                     {
                         List<string> newList = new List<string>();
                         List<string> auxiliar = allTokens[i];
@@ -977,6 +977,22 @@ namespace AnalizadorLexico
         private void GUI_Load(object sender, EventArgs e)
         {
 
+        }
+
+        public bool contieneSet(List<string> auxiliar) {
+            bool response = false;
+            List<string> keys = alfabeto.Keys.ToList();
+            for (int i = 0; i < keys.Count; i++)
+            {
+                for (int j = 0; j < auxiliar.Count; j++)
+                {
+                    if (auxiliar[j].Contains(keys[i]))
+                    {
+                        response = true;
+                    }
+                }
+            }
+            return response; 
         }
 
         private void button1_Click(object sender, EventArgs e)
