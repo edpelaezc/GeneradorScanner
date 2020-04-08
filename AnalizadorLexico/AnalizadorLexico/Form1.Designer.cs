@@ -49,6 +49,7 @@
             this.listBox3 = new System.Windows.Forms.ListBox();
             this.label9 = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
+            this.programarAutomata = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -236,11 +237,22 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
+            // programarAutomata
+            // 
+            this.programarAutomata.Location = new System.Drawing.Point(812, 334);
+            this.programarAutomata.Name = "programarAutomata";
+            this.programarAutomata.Size = new System.Drawing.Size(142, 43);
+            this.programarAutomata.TabIndex = 22;
+            this.programarAutomata.Text = "Programar autómata";
+            this.programarAutomata.UseVisualStyleBackColor = true;
+            this.programarAutomata.Click += new System.EventHandler(this.programarAutomata_Click);
+            // 
             // GUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(988, 686);
+            this.Controls.Add(this.programarAutomata);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.label9);
             this.Controls.Add(this.listBox3);
@@ -293,6 +305,7 @@
         private System.Windows.Forms.ListBox listBox3;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button programarAutomata;
     }
 }
 

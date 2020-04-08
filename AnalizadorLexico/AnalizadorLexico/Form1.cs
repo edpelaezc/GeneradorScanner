@@ -27,6 +27,7 @@ namespace AnalizadorLexico
         Dictionary<string, int> errores = new Dictionary<string, int>();
         Dictionary<int, List<int>> follow = new Dictionary<int, List<int>>();
         List<string> auxActions = new List<string>();
+        DFA funcionesDFA = new DFA();
 
         public GUI()
         {
@@ -741,8 +742,7 @@ namespace AnalizadorLexico
         }
 
         private void generarDFA_Click(object sender, EventArgs e)
-        {
-            DFA funcionesDFA = new DFA();            
+        {              
             //concatenar tokens para generar expresion regular
             string expresion = "";            
             List<List<string>> allTokens = tokens.Values.ToList();
@@ -998,6 +998,38 @@ namespace AnalizadorLexico
         private void button1_Click(object sender, EventArgs e)
         {
             Application.Restart();
+        }
+
+        private void programarAutomata_Click(object sender, EventArgs e)
+        {
+            List<Transicion> transiciones = funcionesDFA.transiciones;
+            Codigo programarAutomata = new Codigo();
+
+            programarAutomata.setAlfabeto(alfabeto);
+            programarAutomata.escribirClase();
+            programarAutomata.escribirConjuntos(alfabeto);
+            programarAutomata.escribirInterfaz();
+            programarAutomata.escribirSwitch();
+
+
+
+            programarAutomata.terminarSwitch();
+            programarAutomata.terminarFor();
+
+            programarAutomata.terminarClase();
+
+            //escribir archivo
+            string folder = @"C:\Compilar\";
+            string fullPath = folder + "Automata.cs";
+
+            // crear el directorio
+            DirectoryInfo directory = Directory.CreateDirectory(folder);
+
+            using (StreamWriter file = new StreamWriter(fullPath))
+            {
+                file.WriteLine(programarAutomata.getClass());
+                file.Close();
+            }
         }
     }
 }

@@ -1,0 +1,9 @@
+C:\GitHub\Fase1_LFA\AnalizadorLexico\AnalizadorLexico\bin\Debug\AnalizadorLexico.exe.config
+C:\GitHub\Fase1_LFA\AnalizadorLexico\AnalizadorLexico\bin\Debug\AnalizadorLexico.exe
+C:\GitHub\Fase1_LFA\AnalizadorLexico\AnalizadorLexico\obj\Debug\Scanner.csprojAssemblyReference.cache
+C:\GitHub\Fase1_LFA\AnalizadorLexico\AnalizadorLexico\obj\Debug\AnalizadorLexico.GUI.resources
+C:\GitHub\Fase1_LFA\AnalizadorLexico\AnalizadorLexico\obj\Debug\AnalizadorLexico.Properties.Resources.resources
+C:\GitHub\Fase1_LFA\AnalizadorLexico\AnalizadorLexico\obj\Debug\Scanner.csproj.GenerateResource.cache
+C:\GitHub\Fase1_LFA\AnalizadorLexico\AnalizadorLexico\obj\Debug\AnalizadorLexico.exe
+C:\GitHub\Fase1_LFA\AnalizadorLexico\AnalizadorLexico\obj\Debug\AnalizadorLexico.pdb
+C:\GitHub\Fase1_LFA\AnalizadorLexico\AnalizadorLexico\bin\Debug\AnalizadorLexico.pdb
