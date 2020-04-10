@@ -1006,15 +1006,29 @@ namespace AnalizadorLexico
             Codigo programarAutomata = new Codigo();
 
             programarAutomata.setAlfabeto(alfabeto);
+            programarAutomata.setActions(actions);
             programarAutomata.escribirClase();
-            programarAutomata.escribirConjuntos(alfabeto);
+            programarAutomata.escribirConjuntos(alfabeto);            
             programarAutomata.escribirInterfaz();
             programarAutomata.escribirSwitch();
 
-
+            for (int i = 1; i <= funcionesDFA.estados.Count; i++)
+            {
+                List<Transicion> aux = new List<Transicion>();
+                for (int j = 0; j < transiciones.Count; j++)
+                {
+                    if (transiciones[j].origen.numero == i)
+                    {
+                        aux.Add(transiciones[j]);
+                    }
+                }
+                programarAutomata.escribirCase(i, aux);
+            }
 
             programarAutomata.terminarSwitch();
             programarAutomata.terminarFor();
+
+            programarAutomata.escribirSalida();
 
             programarAutomata.terminarClase();
 
