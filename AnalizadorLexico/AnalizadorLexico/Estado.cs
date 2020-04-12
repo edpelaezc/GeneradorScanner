@@ -14,6 +14,8 @@ namespace AnalizadorLexico
         //true ->estado de aceptación 
         public bool aceptacion { get; set; }
 
+        public List<KeyValuePair<List<string>, int>> token = new List<KeyValuePair<List<string>, int>>();
+
         public Estado() { }
 
         public Estado(int numero, List<int> conjunto) {

@@ -979,6 +979,89 @@ namespace AnalizadorLexico
 
         }
 
+        //método que asigna los tokens a los estados de aceptación 
+        public void asignarTokens() {
+            List<Estado> estados = funcionesDFA.estados;
+            List<Transicion> transiciones = funcionesDFA.transiciones;
+            int currentState = 1;
+
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                int numero = int.Parse(tokens.Keys.ToList()[i].Replace("TOKEN", ""));
+                List<string> aux = tokens.Values.ToList()[i];
+
+                //SI EL TOKEN CONTIENE OPERANDOS QUE SON SETS
+                if (contieneSet(aux))
+                {
+                    //conseguir solo los operandos del token 
+                    var auxiliar = (
+                                    from element in aux 
+                                    where element != "*" && element != "+" && element != "?" && element != "." && element != "|" && element != "(" && element != ")"
+                                    select element
+                                    ).ToList();
+
+                    for (int j = 0; j < auxiliar.Count; j++)
+                    {
+                        //usar los simbolos para evaluar el token en las transiciones
+                        for (int k = 0; k < transiciones.Count; k++)
+                        {
+                            if (transiciones[k].origen.numero == currentState && transiciones[k].simbolo == auxiliar[j])
+                            {
+                                currentState = transiciones[k].destino.numero;
+                                k = transiciones.Count;
+                            }
+                        }                        
+                    }
+
+                    //terminó el recorrido de los tokens por el automata
+                    for (int p = 0; p < estados.Count; p++)
+                    {
+                        if (estados[p].numero == currentState)
+                        {
+                            auxiliar = auxiliar.Distinct().ToList();
+                            estados[p].token.Add(new KeyValuePair<List<string>, int> (auxiliar, numero));
+                            p = estados.Count;
+                        }
+                    }
+                    
+                    currentState = 1;
+                }
+                /////////
+                //si no contiene sets el token
+                else
+                {
+                    for (int j = 0; j < aux.Count; j++)
+                    {
+                        //usar los simbolos para evaluar el token en las transiciones
+                        for (int k = 0; k < transiciones.Count; k++)
+                        {
+                            if (transiciones[k].origen.numero == currentState && transiciones[k].simbolo == aux[j])
+                            {
+                                currentState = transiciones[k].destino.numero;
+                                k = transiciones.Count;
+                            }
+                        }
+                    }
+
+                    //terminó el recorrido de los tokens por el automata
+                    for (int p = 0; p < estados.Count; p++)
+                    {
+                        if (estados[p].numero == currentState)
+                        {                            
+                            estados[p].token.Add(new KeyValuePair<List<string>, int>(aux, numero));
+                            p = estados.Count;
+                        }
+                    }
+
+                    currentState = 1;
+
+                }   
+                //termina analisis
+            }
+
+            Console.WriteLine("ASIGNACIÓN DE TOKES A LOS ESTADOS DE ACEPTACION");
+        }
+
         public bool contieneSet(List<string> auxiliar) {
             bool response = false;
             List<string> keys = alfabeto.Keys.ToList();
@@ -1002,6 +1085,7 @@ namespace AnalizadorLexico
 
         private void programarAutomata_Click(object sender, EventArgs e)
         {
+            asignarTokens();
             List<Transicion> transiciones = funcionesDFA.transiciones;
             Codigo programarAutomata = new Codigo();
 
@@ -1027,7 +1111,7 @@ namespace AnalizadorLexico
 
             programarAutomata.terminarSwitch();
             programarAutomata.terminarFor();
-
+            
             programarAutomata.escribirSalida();
 
             programarAutomata.terminarClase();
