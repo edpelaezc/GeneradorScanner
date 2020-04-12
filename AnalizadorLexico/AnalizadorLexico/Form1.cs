@@ -1089,6 +1089,7 @@ namespace AnalizadorLexico
             List<Transicion> transiciones = funcionesDFA.transiciones;
             Codigo programarAutomata = new Codigo();
 
+            programarAutomata.setEstados(funcionesDFA.estados);
             programarAutomata.setAlfabeto(alfabeto);
             programarAutomata.setActions(actions);
             programarAutomata.escribirClase();

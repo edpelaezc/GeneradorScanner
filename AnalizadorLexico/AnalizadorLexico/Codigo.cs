@@ -11,7 +11,12 @@ namespace AnalizadorLexico
     {
         Dictionary<string, List<int>> alfabeto = new Dictionary<string, List<int>>();
         Dictionary<int, string> actions = new Dictionary<int, string>();
+        List<Estado> estados = new List<Estado>();
         string outPutClass = "";
+
+        public void setEstados(List<Estado> estados) {
+            this.estados = estados;
+        }
 
         public void setAlfabeto(Dictionary<string, List<int>> alfabeto) {
             this.alfabeto = alfabeto;
@@ -170,7 +175,7 @@ namespace AnalizadorLexico
                            "\t\tConsole.WriteLine(\"PROCESO TERMINADO CON EXITO\");\n\t}\n";
         }
 
-        public void escribirRetroceso() { 
+        public void escribirCaseToken() { 
             
         }
     }
