@@ -1092,6 +1092,7 @@ namespace AnalizadorLexico
             programarAutomata.setEstados(funcionesDFA.estados);
             programarAutomata.setAlfabeto(alfabeto);
             programarAutomata.setActions(actions);
+            programarAutomata.setErrores(errores);
             programarAutomata.escribirClase();
             programarAutomata.escribirConjuntos(alfabeto);            
             programarAutomata.escribirInterfaz();
@@ -1111,10 +1112,11 @@ namespace AnalizadorLexico
             }
 
             programarAutomata.terminarSwitch();
-            programarAutomata.terminarFor();
-            
-            programarAutomata.escribirSalida();
+            programarAutomata.terminarFor();            
+            //programarAutomata.escribirSalida();
 
+            programarAutomata.terminarMain();
+            programarAutomata.escribirCaseToken();
             programarAutomata.terminarClase();
 
             //escribir archivo

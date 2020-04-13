@@ -11,8 +11,31 @@ namespace AnalizadorLexico
     {
         Dictionary<string, List<int>> alfabeto = new Dictionary<string, List<int>>();
         Dictionary<int, string> actions = new Dictionary<int, string>();
+        Dictionary<string, int> errores = new Dictionary<string, int>();
         List<Estado> estados = new List<Estado>();
         string outPutClass = "";
+        
+        public void escribirActions() {            
+            outPutClass += "\tDictionary<int, string> actions = new Dictionary<int, string>()\n" +
+                           "\t{\n";
+            for (int i = 0; i < actions.Count; i++)
+            {
+                KeyValuePair<int, string> aux = actions.ElementAt(i);
+                if (i != actions.Count - 1)
+                {
+                    outPutClass += "\t\t{" + aux.Key.ToString() + ", \"" + aux.Value.Replace("'", "") + "\"},\n";
+                }
+                else
+                {
+                    outPutClass += "\t\t{" + aux.Key.ToString() + ", \"" + aux.Value.Replace("'", "") + "\"}\n";
+                }
+            }
+            outPutClass += "\t};\n\n"; //terminar diccionario
+        }
+
+        public void setErrores(Dictionary<string, int> errores) {
+            this.errores = errores; 
+        }
 
         public void setEstados(List<Estado> estados) {
             this.estados = estados;
@@ -41,17 +64,21 @@ namespace AnalizadorLexico
         public void escribirClase() {
             outPutClass += "using System;\n" +
                            "using System.IO;\n" +
+                           "using System.Linq;\n" +
                            "using System.Collections;\n" +
                            "using System.Collections.Generic;\n\n" +
                            "class Automata {\n" +
                            "static void Main(string[] args) {\n" +
                            "\tint estado = 1;\n" +
-                           "\tstring auxiliar = \"\";\n" +
-                           "\tbool error = false;\n";                        
+                           "\tstring auxiliar = \"\";\n";                                               
+        }
+
+        public void terminarMain() {
+            outPutClass += "\n}";
         }
 
         public void terminarClase() {
-            outPutClass += "\n}\n}";
+            outPutClass += "\n}";
         }
         public void escribirConjuntos(Dictionary<string, List<int>> alfabeto) {            
             for (int i = 0; i < alfabeto.Count; i++)
@@ -74,7 +101,9 @@ namespace AnalizadorLexico
 
         public void terminarFor() {
             outPutClass += "\t}\n\n" +
-                "\tConsole.WriteLine(auxiliar + \",\" + estado.ToString() + \",no. de token\");\n\n";
+                "\tConsole.WriteLine(auxiliar + \", TOKEN: \" + obtenerToken(estado, auxiliar));\n" +
+                "\tConsole.WriteLine(\"\\nTERMINADO\");\n" +
+                "\tConsole.ReadLine();\n";
         }
 
         public void escribirSwitch() {
@@ -127,7 +156,7 @@ namespace AnalizadorLexico
                     {
                         //validacion de espacios 
                         outPutClass += "\t\t\t\telse if(cadena[i] == 9 || cadena[i] == 10 || cadena[i] == 13 || cadena[i] == 26 || cadena[i] == 32){\n" +
-                                       "\t\t\t\t\tConsole.WriteLine(auxiliar + \",\" + estado.ToString() + \",no. de token\");\n" +
+                                       "\t\t\t\t\tConsole.WriteLine(auxiliar + \", TOKEN: \" + obtenerToken(estado, auxiliar));\n" +
                                        "\t\t\t\t\tauxiliar = \"\";\n" +
                                        "\t\t\t\t\testado = 1;\n" +
                                        "\t\t\t\t}\n";
@@ -139,13 +168,15 @@ namespace AnalizadorLexico
                 if (transicion[0].origen.numero.Equals(1))
                 {
                     outPutClass += "\t\t\t\telse{\n" +
-                                   "\t\t\t\t\terror = true;\n\t\t\t\t}\n";
+                                   "\t\t\t\t\tConsole.WriteLine(cadena[i] + \", no. de token: " + errores.ElementAt(0).Value + ",ERROR\");\n" +
+                                   "\t\t\t\t\testado = 1;\n" +
+                                   "\t\t\t\t}\n";
                 }
                 else
                 {
                     outPutClass += "\t\t\t\telse{\n" +
                    "\t\t\t\t\t//en caso de que venga cualquier otro simbolo que no pertenece a las transiciones del estado\n" +
-                   "\t\t\t\t\tConsole.WriteLine(auxiliar + \",\" + estado.ToString() + \",no. de token\");\n" +
+                   "\t\t\t\t\tConsole.WriteLine(auxiliar + \", TOKEN: \" + obtenerToken(estado, auxiliar));\n" +
                    "\t\t\t\t\testado = 1;\n" +
                    "\t\t\t\t\ti--;\n" +
                    "\t\t\t\t\tauxiliar = \"\";\n" +
@@ -157,7 +188,7 @@ namespace AnalizadorLexico
             {// si el estado no tiene transiciones
                 outPutClass +=
                "\t\t\t\t\t//en caso de que venga cualquier otro simbolo que no pertenece a las transiciones del estado\n" +
-               "\t\t\t\t\tConsole.WriteLine(auxiliar + \",\" + estado.ToString() + \",no. de token\");\n" +
+               "\t\t\t\t\tConsole.WriteLine(auxiliar + \", TOKEN: \" + obtenerToken(estado, auxiliar));\n" +
                "\t\t\t\t\testado = 1;\n" +
                "\t\t\t\t\ti--;\n" +
                "\t\t\t\t\tauxiliar = \"\";\n";                   
@@ -168,15 +199,77 @@ namespace AnalizadorLexico
             outPutClass += "\t\t\tbreak;\n";
         }
 
-        public void escribirSalida() {
-            outPutClass += "\tif(error){\n" +
-                           "\t\tConsole.WriteLine(\"ERROR EN EL ARCHIVO DE ENTRADA.\");\n\t}\n" +
-                           "\telse{\n" +
-                           "\t\tConsole.WriteLine(\"PROCESO TERMINADO CON EXITO\");\n\t}\n";
+        public void escribirCaseToken() {
+            outPutClass += "\n\n\n\tstatic int obtenerToken(int estado, string auxiliar){\n";
+            escribirActions();
+            outPutClass += "\t\tint response = 0;\n";                                    
+            //compara si auxiliar pertenece a las actions, si no: evalua los estados.
+            outPutClass += "\t\tif(actions.Values.Contains(auxiliar.ToUpper())){\n" +
+                           "\t\t\tfor(int i = 0; i < actions.Count; i++){\n" +
+                           "\t\t\t\tif(actions.ElementAt(i).Value.Equals(auxiliar.ToUpper())){\n" +
+                           "\t\t\t\t\tresponse = actions.ElementAt(i).Key;\n\t\t\t\t}\n" +
+                           "\t\t\t}\n" +
+                           "\t\t} else {\n";
+
+
+            outPutClass += "\t\t\tswitch(estado){\n"; //empieza switch
+            for (int i = 0; i < estados.Count; i++)
+            {
+                if (estados[i].aceptacion)
+                {
+                    outPutClass += "\t\t\t\tcase " + estados[i].numero.ToString() + ":\n";
+                    if (estados[i].token.Count == 1)
+                    {
+                        KeyValuePair<List<string>, int> auxiliar = estados[i].token[0];
+                        outPutClass += "\t\t\t\t\tresponse = " + auxiliar.Value.ToString() + "; break;\n";
+                    }
+                    else
+                    {
+                        for (int j = 0; j < estados[i].token.Count; j++)
+                        {
+                            KeyValuePair<List<string>, int> auxiliar = estados[i].token[j];
+                            if (!contieneSet(auxiliar.Key)) // si no contiene sets
+                            {
+                                outPutClass += "\t\t\t\t\tif(auxiliar == \"" + concatenar(auxiliar.Key) + "\"){\n";
+                                outPutClass += "\t\t\t\t\t\tresponse = " + auxiliar.Value.ToString() + ";\n";
+                                outPutClass += "\t\t\t\t\t}\n";                                
+                            }
+                        }
+                        outPutClass += "\t\t\t\t\tbreak;\n";
+                    }
+                }
+            }
+            
+            outPutClass += "\t\t\t}\n"; //termina switch
+            outPutClass += "\t\t}\n";
+            outPutClass += "\t\treturn response; \n";
+            outPutClass += "\t}\n"; // termina procedimiento
         }
 
-        public void escribirCaseToken() { 
-            
+        public bool contieneSet(List<string> auxiliar)
+        {
+            bool response = false;
+            List<string> keys = alfabeto.Keys.ToList();
+            for (int i = 0; i < keys.Count; i++)
+            {
+                for (int j = 0; j < auxiliar.Count; j++)
+                {
+                    if (auxiliar[j].Contains(keys[i]))
+                    {
+                        response = true;
+                    }
+                }
+            }
+            return response;
+        }
+
+        public string concatenar(List<string> token) {
+            string response = "";
+            for (int i = 0; i < token.Count; i++)
+            {
+                response += token[i];
+            }
+            return response; 
         }
     }
 }
