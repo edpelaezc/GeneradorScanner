@@ -152,7 +152,7 @@ namespace AnalizadorLexico
                                        "\t\t\t\t\ti++;\n" +
                                        "\t\t\t\t}\n";
                     }
-                    else
+                    if (i == transicion.Count - 1)
                     {
                         //validacion de espacios 
                         outPutClass += "\t\t\t\telse if(cadena[i] == 9 || cadena[i] == 10 || cadena[i] == 13 || cadena[i] == 26 || cadena[i] == 32){\n" +
@@ -185,13 +185,22 @@ namespace AnalizadorLexico
 
             }
             else
-            {// si el estado no tiene transiciones
+            {
+                //validacion de espacios 
+                outPutClass += "\t\t\t\t\tif(cadena[i] == 9 || cadena[i] == 10 || cadena[i] == 13 || cadena[i] == 26 || cadena[i] == 32){\n" +
+                               "\t\t\t\t\t\tConsole.WriteLine(auxiliar + \", TOKEN: \" + obtenerToken(estado, auxiliar));\n" +
+                               "\t\t\t\t\t\tauxiliar = \"\";\n" +
+                               "\t\t\t\t\t\testado = 1;\n" +
+                               "\t\t\t\t\t}\n";
+                // si el estado no tiene transiciones
                 outPutClass +=
                "\t\t\t\t\t//en caso de que venga cualquier otro simbolo que no pertenece a las transiciones del estado\n" +
-               "\t\t\t\t\tConsole.WriteLine(auxiliar + \", TOKEN: \" + obtenerToken(estado, auxiliar));\n" +
-               "\t\t\t\t\testado = 1;\n" +
-               "\t\t\t\t\ti--;\n" +
-               "\t\t\t\t\tauxiliar = \"\";\n";                   
+               "\t\t\t\t\telse{\n" +
+               "\t\t\t\t\t\tConsole.WriteLine(auxiliar + \", TOKEN: \" + obtenerToken(estado, auxiliar));\n" +
+               "\t\t\t\t\t\testado = 1;\n" +
+               "\t\t\t\t\t\ti--;\n" +
+               "\t\t\t\t\t\tauxiliar = \"\";\n" +
+               "\t\t\t\t\t}\n";                   
             }
 
 
