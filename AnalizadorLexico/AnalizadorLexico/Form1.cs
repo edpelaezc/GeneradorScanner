@@ -595,9 +595,6 @@ namespace AnalizadorLexico
                     }
                 }
             }
-
-
-
             return response;
         }
 
@@ -990,7 +987,7 @@ namespace AnalizadorLexico
 
             for (int i = 0; i < tokens.Count; i++)
             {
-                int numero = int.Parse(tokens.Keys.ToList()[i].Replace("TOKEN", ""));
+                int numero = int.Parse(tokens.Keys.ToList()[i].ToUpper().Replace("TOKEN", ""));
                 List<string> aux = tokens.Values.ToList()[i];
 
                 //SI EL TOKEN CONTIENE OPERANDOS QUE SON SETS
@@ -1087,7 +1084,7 @@ namespace AnalizadorLexico
         }
 
         private void programarAutomata_Click(object sender, EventArgs e)
-        {
+        {            
             asignarTokens();
             List<Transicion> transiciones = funcionesDFA.transiciones;
             Codigo programarAutomata = new Codigo();
@@ -1097,7 +1094,8 @@ namespace AnalizadorLexico
             programarAutomata.setActions(actions);
             programarAutomata.setErrores(errores);
             programarAutomata.escribirClase();
-            programarAutomata.escribirConjuntos(alfabeto);            
+            programarAutomata.escribirConjuntos(alfabeto);
+            programarAutomata.escribirMain();
             programarAutomata.escribirInterfaz();
             programarAutomata.escribirSwitch();
 
@@ -1120,6 +1118,7 @@ namespace AnalizadorLexico
 
             programarAutomata.terminarMain();
             programarAutomata.escribirCaseToken();
+            programarAutomata.escribirValidacionConjunto();
             programarAutomata.terminarClase();
 
             //escribir archivo

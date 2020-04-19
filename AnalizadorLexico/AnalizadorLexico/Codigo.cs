@@ -67,10 +67,13 @@ namespace AnalizadorLexico
                            "using System.Linq;\n" +
                            "using System.Collections;\n" +
                            "using System.Collections.Generic;\n\n" +
-                           "class Automata {\n" +
-                           "static void Main(string[] args) {\n" +
+                           "class Automata {\n";                                          
+        }
+
+        public void escribirMain() { 
+            outPutClass += "static void Main(string[] args) {\n" +
                            "\tint estado = 1;\n" +
-                           "\tstring auxiliar = \"\";\n";                                               
+                           "\tstring auxiliar = \"\";\n";
         }
 
         public void terminarMain() {
@@ -88,7 +91,7 @@ namespace AnalizadorLexico
         }
 
         public string escribirLista(KeyValuePair<string, List<int>> elemento) {
-            return "\tList<int> " + elemento.Key.ToString() + " = new List<int> {" + string.Join(",", elemento.Value.ToArray()) + "};\n";
+            return "\tstatic List<int> " + elemento.Key.ToString() + " = new List<int> {" + string.Join(",", elemento.Value.ToArray()) + "};\n";
         }
 
         public void escribirInterfaz() {
@@ -116,10 +119,11 @@ namespace AnalizadorLexico
 
         public void escribirCase(int num, List<Transicion> transicion) {
             string condicion = "";
-            outPutClass += "\t\t\tcase " + num.ToString() + ":\n";
+            outPutClass += "\t\t\tcase " + num.ToString() + ":\n";            
             
             if (transicion.Count != 0) // si el estado tiene transiciones
             {
+                int actual = transicion[0].origen.numero;
                 for (int i = 0; i < transicion.Count; i++)
                 {
                     if (alfabeto.Keys.Contains(transicion[i].simbolo))
@@ -145,21 +149,24 @@ namespace AnalizadorLexico
                                        "\t\t\t\t\tauxiliar += cadena[i];\n\t\t\t\t}\n";
                     }
 
-                    if (transicion[0].origen.numero == 1)
-                    {
-                        //validacion de espacios 
-                        outPutClass += "\t\t\t\telse if(cadena[i] == 9 || cadena[i] == 10 || cadena[i] == 13 || cadena[i] == 26 || cadena[i] == 32){\n" +
-                                       "\t\t\t\t\ti++;\n" +
-                                       "\t\t\t\t}\n";
-                    }
                     if (i == transicion.Count - 1)
                     {
-                        //validacion de espacios 
-                        outPutClass += "\t\t\t\telse if(cadena[i] == 9 || cadena[i] == 10 || cadena[i] == 13 || cadena[i] == 26 || cadena[i] == 32){\n" +
-                                       "\t\t\t\t\tConsole.WriteLine(auxiliar + \", TOKEN: \" + obtenerToken(estado, auxiliar));\n" +
-                                       "\t\t\t\t\tauxiliar = \"\";\n" +
-                                       "\t\t\t\t\testado = 1;\n" +
-                                       "\t\t\t\t}\n";
+                        if (actual == 1)
+                        {
+                            //validacion de espacios 
+                            outPutClass += "\t\t\t\telse if(cadena[i] == 9 || cadena[i] == 10 || cadena[i] == 13 || cadena[i] == 26 || cadena[i] == 32){\n" +
+                                           "\t\t\t\t\t//obviar los espacios\n" +
+                                           "\t\t\t\t}\n";
+                        }
+                        else
+                        {
+                            //validacion de espacios 
+                            outPutClass += "\t\t\t\telse if(cadena[i] == 9 || cadena[i] == 10 || cadena[i] == 13 || cadena[i] == 26 || cadena[i] == 32){\n" +
+                                           "\t\t\t\t\tConsole.WriteLine(auxiliar + \", TOKEN: \" + obtenerToken(estado, auxiliar));\n" +
+                                           "\t\t\t\t\tauxiliar = \"\";\n" +
+                                           "\t\t\t\t\testado = 1;\n" +
+                                           "\t\t\t\t}\n";
+                        }
                     }
                 }
 
@@ -168,31 +175,39 @@ namespace AnalizadorLexico
                 if (transicion[0].origen.numero.Equals(1))
                 {
                     outPutClass += "\t\t\t\telse{\n" +
-                                   "\t\t\t\t\tConsole.WriteLine(cadena[i] + \", no. de token: " + errores.ElementAt(0).Value + ",ERROR\");\n" +
+                                   "\t\t\t\t\tConsole.WriteLine(cadena[i] + \", no. de token: " + errores.ElementAt(0).Value + "\");\n" +
                                    "\t\t\t\t\testado = 1;\n" +
                                    "\t\t\t\t}\n";
                 }
                 else
                 {
                     outPutClass += "\t\t\t\telse{\n" +
-                   "\t\t\t\t\t//en caso de que venga cualquier otro simbolo que no pertenece a las transiciones del estado\n" +
-                   "\t\t\t\t\tConsole.WriteLine(auxiliar + \", TOKEN: \" + obtenerToken(estado, auxiliar));\n" +
-                   "\t\t\t\t\testado = 1;\n" +
-                   "\t\t\t\t\ti--;\n" +
-                   "\t\t\t\t\tauxiliar = \"\";\n" +
+                   "\t\t\t\t\tif(validacion(cadena[i]) == false){\n" +
+                   "\t\t\t\t\t\tauxiliar += cadena[i];\n" +
+                   "\t\t\t\t\t\tConsole.WriteLine(auxiliar + \", no. de token: " + errores.ElementAt(0).Value + "\");\n" +
+                   "\t\t\t\t\t\tauxiliar = \"\";\n" +
+                   "\t\t\t\t\t\testado = 1;\n" +
+                   "\t\t\t\t\t}\n" +
+                   "\t\t\t\t\telse{\n" +
+                   "\t\t\t\t\t\t//en caso de que venga cualquier otro simbolo que no pertenece a las transiciones del estado\n" +
+                   "\t\t\t\t\t\tConsole.WriteLine(auxiliar + \", TOKEN: \" + obtenerToken(estado, auxiliar));\n" +
+                   "\t\t\t\t\t\testado = 1;\n" +
+                   "\t\t\t\t\t\ti--;\n" +
+                   "\t\t\t\t\t\tauxiliar = \"\";\n" +
+                   "\t\t\t\t\t}\n" +
                    "\t\t\t\t}\n";
                 }
 
             }
             else
             {
+                // si el estado no tiene transiciones
                 //validacion de espacios 
                 outPutClass += "\t\t\t\t\tif(cadena[i] == 9 || cadena[i] == 10 || cadena[i] == 13 || cadena[i] == 26 || cadena[i] == 32){\n" +
                                "\t\t\t\t\t\tConsole.WriteLine(auxiliar + \", TOKEN: \" + obtenerToken(estado, auxiliar));\n" +
                                "\t\t\t\t\t\tauxiliar = \"\";\n" +
                                "\t\t\t\t\t\testado = 1;\n" +
-                               "\t\t\t\t\t}\n";
-                // si el estado no tiene transiciones
+                               "\t\t\t\t\t}\n";                
                 outPutClass +=
                "\t\t\t\t\t//en caso de que venga cualquier otro simbolo que no pertenece a las transiciones del estado\n" +
                "\t\t\t\t\telse{\n" +
@@ -208,10 +223,34 @@ namespace AnalizadorLexico
             outPutClass += "\t\t\tbreak;\n";
         }
 
+        public void escribirValidacionConjunto() {
+            string condicion = "";
+            outPutClass += "\n\n\tstatic bool validacion(char cadena){\n" +
+                           "\t\tbool response = false;\n" +
+                           "\t\tif(";
+            for (int i = 0; i < alfabeto.Count; i++)
+            {
+                condicion = alfabeto.ElementAt(i).Key.ToString() + ".Contains(cadena)";
+                if (i == 0)
+                {
+                    outPutClass += condicion;
+                }
+                else
+                {
+                    outPutClass += " || " + condicion;
+                }
+            }
+            outPutClass += "){\n";
+            outPutClass += "\t\t\tresponse = true;\n";
+            outPutClass += "\t\t}\n" +
+                           "\t\treturn response;\n"; //termina if 
+            outPutClass += "\t}\n"; //termina el procedimiento
+        }
+
         public void escribirCaseToken() {
             outPutClass += "\n\n\n\tstatic int obtenerToken(int estado, string auxiliar){\n";
             escribirActions();
-            outPutClass += "\t\tint response = 0;\n";                                    
+            outPutClass += "\t\tint response = " + errores.ElementAt(0).Value.ToString() + ";\n";
             //compara si auxiliar pertenece a las actions, si no: evalua los estados.
             outPutClass += "\t\tif(actions.Values.Contains(auxiliar.ToUpper())){\n" +
                            "\t\t\tfor(int i = 0; i < actions.Count; i++){\n" +
