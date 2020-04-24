@@ -7,3 +7,4 @@ C:\GitHub\Fase1_LFA\AnalizadorLexico\AnalizadorLexico\obj\Debug\Scanner.csproj.G
 C:\GitHub\Fase1_LFA\AnalizadorLexico\AnalizadorLexico\obj\Debug\AnalizadorLexico.exe
 C:\GitHub\Fase1_LFA\AnalizadorLexico\AnalizadorLexico\obj\Debug\AnalizadorLexico.pdb
 C:\GitHub\Fase1_LFA\AnalizadorLexico\AnalizadorLexico\bin\Debug\AnalizadorLexico.pdb
+C:\GitHub\Fase1_LFA\AnalizadorLexico\AnalizadorLexico\obj\Debug\Scanner.csproj.CoreCompileInputs.cache

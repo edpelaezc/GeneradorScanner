@@ -113,6 +113,9 @@ namespace AnalizadorLexico
             return salida; 
         }
 
+        public void limpiarDiccionario() {
+
+        }
 
         public Nodo obtenerArbolCompleto(List<Nodo> nodos) {
             Nodo salida = new Nodo();
@@ -340,7 +343,7 @@ namespace AnalizadorLexico
                         for (int j = 0; j < response.Count; j++)
                         {
                             if (response.Keys.ToList()[j] == root.izquierdo.last[i])
-                            {
+                            {                                
                                 response.Values.ToList()[j].AddRange(root.izquierdo.first);
                                 response.Values.ToList()[j].Sort();
                                 response.Values.ToList()[j] = response.Values.ToList()[j].Distinct().ToList();
@@ -352,7 +355,13 @@ namespace AnalizadorLexico
         }
 
         public Dictionary<int, List<int>> getFollow() {
-            return response;
+            Dictionary<int, List<int>> auxiliar = new Dictionary<int, List<int>>();
+            for (int i = 0; i < response.Count; i++)
+            {
+                KeyValuePair<int, List<int>> aux = response.ElementAt(i);
+                auxiliar.Add(aux.Key, aux.Value.Distinct().ToList());
+            }
+            return auxiliar;
         }
 
 

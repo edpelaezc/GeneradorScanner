@@ -12,6 +12,8 @@ using System.Text.RegularExpressions;
 using System.CodeDom.Compiler;
 using Microsoft.CSharp;
 using System.Reflection;
+using System.Globalization;
+using System.Diagnostics;
 
 namespace AnalizadorLexico
 {
@@ -857,7 +859,7 @@ namespace AnalizadorLexico
             funcionesDFA.first(raiz);
             funcionesDFA.last(raiz);
             funcionesDFA.inicializarDiccionario(); //inicializa los valores del diccionario con listas vacías 
-            funcionesDFA.calcularFollow(raiz);  //calcula los follow de cada hoja, ingresa los follow al diccionario 
+            funcionesDFA.calcularFollow(raiz);  //calcula los follow de cada hoja, ingresa los follow al diccionario             
             follow = funcionesDFA.getFollow();
             funcionesDFA.obtenerTerminales(raiz); // obtener simbolos terminales para poder calcular las transiciones
             funcionesDFA.simbolosTerminales = funcionesDFA.simbolosTerminales.Distinct().ToList();
@@ -1133,6 +1135,27 @@ namespace AnalizadorLexico
                 file.WriteLine(programarAutomata.getClass());
                 file.Close();
             }
+
+            CompileExecutable(fullPath);
+        }
+
+
+        private static void CompileExecutable(string file)
+        {
+            var direccion = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\Automata.exe";
+            var compiler = new CSharpCodeProvider();
+            var parametros = new CompilerParameters(new[] { "mscorlib.dll", "System.Core.dll" }, direccion, true);
+            parametros.GenerateExecutable = true;
+            //compilar
+            var code = File.ReadAllText(file);
+            CompilerResults result = compiler.CompileAssemblyFromSource(parametros, code);
+            ProcessStartInfo info = new ProcessStartInfo();
+            //ejecutar
+            info.UseShellExecute = true;
+            info.FileName = "Automata.exe";
+            info.WorkingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+
+            Process.Start(info);
         }
     }
 }
