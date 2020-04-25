@@ -12,6 +12,7 @@ namespace AnalizadorLexico
         Dictionary<string, List<int>> alfabeto = new Dictionary<string, List<int>>();
         Dictionary<int, string> actions = new Dictionary<int, string>();
         Dictionary<string, int> errores = new Dictionary<string, int>();
+        List<int> terminales = new List<int>();
         List<Estado> estados = new List<Estado>();
         string outPutClass = "";
         
@@ -92,6 +93,11 @@ namespace AnalizadorLexico
 
         public string escribirLista(KeyValuePair<string, List<int>> elemento) {
             return "\tstatic List<int> " + elemento.Key.ToString() + " = new List<int> {" + string.Join(",", elemento.Value.ToArray()) + "};\n";
+        }
+
+        public void escribirLista(List<int> elemento, string nombre)
+        {
+            outPutClass += "\tstatic List<int> " + nombre + " = new List<int> {" + string.Join(",", elemento.ToArray()) + "};\n";
         }
 
         public void escribirInterfaz() {
@@ -223,6 +229,10 @@ namespace AnalizadorLexico
             outPutClass += "\t\t\tbreak;\n";
         }
 
+        public void setTerminles(List<int> sTerminales) {
+            terminales = sTerminales;
+        }
+
         public void escribirValidacionConjunto() {
             string condicion = "";
             outPutClass += "\n\n\tstatic bool validacion(char cadena){\n" +
@@ -240,6 +250,11 @@ namespace AnalizadorLexico
                     outPutClass += " || " + condicion;
                 }
             }
+
+
+            condicion = " || TERMINALES.Contains(cadena)";
+            outPutClass += condicion;
+
             outPutClass += "){\n";
             outPutClass += "\t\t\tresponse = true;\n";
             outPutClass += "\t\t}\n" +

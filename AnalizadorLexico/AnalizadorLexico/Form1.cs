@@ -1086,17 +1086,39 @@ namespace AnalizadorLexico
         }
 
         private void programarAutomata_Click(object sender, EventArgs e)
-        {            
+        {
+            //quitar los sets
+            List<string> terminales = funcionesDFA.simbolosTerminales;
+            for (int i = 0; i < terminales.Count; i++)
+            {
+                if (alfabeto.Keys.Contains(terminales[i]))
+                {
+                    terminales.RemoveAt(i);
+                }
+            }
+
+            //volver a ascii
+            List<int> auxTerminales = new List<int>();
+            for (int i = 0; i < terminales.Count; i++)
+            {
+                char caracter = char.Parse(terminales[i]);
+                auxTerminales.Add(caracter);
+            }
+
+
+
             asignarTokens();
             List<Transicion> transiciones = funcionesDFA.transiciones;
             Codigo programarAutomata = new Codigo();
 
+            programarAutomata.setTerminles(auxTerminales);
             programarAutomata.setEstados(funcionesDFA.estados);
             programarAutomata.setAlfabeto(alfabeto);
             programarAutomata.setActions(actions);
             programarAutomata.setErrores(errores);
             programarAutomata.escribirClase();
             programarAutomata.escribirConjuntos(alfabeto);
+            programarAutomata.escribirLista(auxTerminales, "TERMINALES");
             programarAutomata.escribirMain();
             programarAutomata.escribirInterfaz();
             programarAutomata.escribirSwitch();
