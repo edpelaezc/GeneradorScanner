@@ -18,8 +18,8 @@ jobs:
       with:
         dotnet-version: 3.1.301
     - name: Install dependencies
-      run: dotnet restore -s /home/runner/work/GeneradorScanner/AnalizadorLexico
+      run: dotnet restore -s /home/runner/work/GeneradorScanner/GeneradorScanner/AnalizadorLexico
     - name: Build
-      run: dotnet build --configuration Release --no-restore --source /home/runner/work/GeneradorScanner/AnalizadorLexico
+      run: dotnet build --configuration Release --no-restore --source /home/runner/work/GeneradorScanner/GeneradorScanner/AnalizadorLexico
     - name: Test
       run: dotnet test --no-restore --verbosity normal
